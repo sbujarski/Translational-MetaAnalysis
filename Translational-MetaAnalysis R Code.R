@@ -256,6 +256,11 @@ table(Lab.Samples$ActPlac)/57
 #55  2 
 #96% 4%
 
+#Pharma funding
+table(Lab.Samples$Pharma)
+#  0  1 
+# 48  9
+
 #Population
 Lab.Samples$Pop <- factor(Lab.Samples$Pop, levels=c("Light", "Heavy", "AUD"))
 table(Lab.Samples$Pop)
@@ -263,13 +268,67 @@ table(Lab.Samples$Pop)
 #   24    19    14 
 
 
-#MeaDpM DriDpMks per MoDpMth
+#Mean Drinks per Month
 SpDesc(Lab.Samples$DpM)
 # nbr.val         min         max      median        mean     SE.mean         var     std.dev 
 # 57.000000    5.600000  336.600000   51.400000   89.271369    9.363888 4997.896522   70.695803 
 Lab.DpM.Hist <- SpHist(Lab.Samples$DpM, bins=10)
 Lab.DpM.Hist
 ggsave(Lab.DpM.Hist, filename="Lab.DpM.Hist.png", width = 6, height = 5, dpi=300)
+#qq plot to look for normality of DpM
+SpQQPlot(Lab.Samples$DpM)
+shapiro.test(Lab.Samples$DpM) #p < 0.0001
+SpQQPlot(log(Lab.Samples$DpM))
+shapiro.test(log(Lab.Samples$DpM)) #p = 0.01994
+#Use log DpM
+Lab.Samples$logDpM <- log(Lab.Samples$DpM)
+Lab.noSA.main$logDpM <- log(Lab.noSA.main$DpM)
+
+
+
+
+#Max Alcohol Dose
+SpDesc(Lab.Samples$MaxAlcDose)
+# nbr.val          min          max       median         mean      SE.mean          var      std.dev 
+# 5.700000e+01 1.000000e-02 1.150000e-01 6.000000e-02 6.032523e-02 3.354349e-03 6.413445e-04 2.532478e-02 
+Lab.MaxAlcDose.Hist <- SpHist(Lab.Samples$MaxAlcDose, bins=10)
+Lab.MaxAlcDose.Hist
+ggsave(Lab.MaxAlcDose.Hist, filename="Lab.MaxAlcDose.Hist.png", width = 6, height = 5, dpi=300)
+#qq plot to look for normality of DpM
+SpQQPlot(Lab.Samples$MaxAlcDose)
+shapiro.test(Lab.Samples$MaxAlcDose) #p < 0.0001
+SpQQPlot(log(Lab.Samples$MaxAlcDose))
+shapiro.test(log(Lab.Samples$DpM)) #p = 0.06541
+
+
+#Effect size summaries
+
+#total number of effects: 408
+length(Lab.noSA.main$ES)
+
+#Number of effects with no stat reported:
+table(Lab.noSA.main$NoStat)
+table(Lab.noSA.main$NoStat)/408
+#   0   1 
+# 240 168 
+# 59% 41%
+
+#Are certain meds more common with no Stat
+table(Lab.noSA.main$Med, Lab.noSA.main$NoStat)
+#Paroxetine, rimonabant, zonisamide, Indomethacin have no reported stats!!
+
+#Outcome domains
+table(Lab.noSA.main$OutDomain)
+table(Lab.noSA.main$OutDomain)/408
+# Craving     NegMood    Sedation Stimulation 
+#      72          46         171         119 
+#     18%         11%         42%         29%
+OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=as.factor(NoStat)), width = 0.8) + 
+  ggtitle("Number of Effect Sizes Per Domain") + 
+  scale_x_discrete("Outcome Domain") +
+  SpTheme(legend.position = "right")
+OutDomain.plot
+
 
 
 #IMPORT RCT DATA----
