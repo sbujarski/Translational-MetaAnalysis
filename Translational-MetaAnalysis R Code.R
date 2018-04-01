@@ -196,6 +196,18 @@ Lab.Samples <- distinct(Lab.noSA.main[c("ID", "Sample", "Author", "Year", "Journ
 dim(Lab.Samples)
 str(Lab.Samples)
 
+#Medication
+length(table(Lab.Samples$Med))
+#24 total medications
+
+table(Lab.Samples$Med)
+# Acamprosate Aripiprazole     Baclofen  Dutasteride  Finasteride   Gabapentin    Ibudilast     Idazoxan Indomethacin   Isoflavone   Ivermectin 
+#           2            2            2            1            1            2            1            1            1            1            1 
+# Mecamylamine    Memantine    Nalmefene   Naltrexone   Olanzapine  Ondansetron   Paroxetine   Quetiapine   Rimonabant   Ritanserin   Topiramate 
+#            3            2            2           23            2            1            1            1            1            1            1 
+# Varenicline   Zonisamide 
+#           3            1 
+
 #Year
 table(Lab.Samples$Year)
 SpDesc(Lab.Samples$Year)
@@ -207,6 +219,8 @@ ggsave(Lab.Years.Hist, filename="Lab.Years.Hist.png", width = 6, height = 5, dpi
 Lab.Samples <- Lab.Samples %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1994, 1999, 2004, 2009, 2014, Inf), 
                                      labels=c("Pre 1995", "1995-1999", "2000-2004", "2005-2009", "2010-2014", "Post 2014")))
 table(Lab.Samples$YearBins)
+# Pre 1995 1995-1999 2000-2004 2005-2009 2010-2014 Post 2014 
+#        1         8        14        16        14         3
 
 #Journal
 table(Lab.Samples$Journal)
@@ -215,21 +229,47 @@ table(Lab.Samples$Journal)
 table(Lab.Samples$WithinMed)
 table(Lab.Samples$WithinMed)/sum(table(Lab.Samples$WithinMed))
 #  0   1 
-# 22  33
-#0.4 0.6 
+# 22  25
+#39% 61% 
 
 #Sample Size
 SpDesc(Lab.Samples$N)
 #   nbr.val        min        max     median       mean    SE.mean        var    std.dev 
-# 55.000000  10.000000  90.000000  24.000000  31.345455   2.828453 440.008081  20.976370
-SpHist(Lab.Samples$N, bins = 10)
+# 57.000000  10.000000  90.000000  25.000000  32.929825   2.894106 477.423559  21.850024 
+Lab.N.Hist <- SpHist(Lab.Samples$N, bins=10)
+Lab.N.Hist
+ggsave(Lab.N.Hist, filename="Lab.N.Hist.png", width = 6, height = 5, dpi=300)
+
 Lab.Samples <- Lab.Samples %>% mutate(NBins = cut(N, breaks=c(-Inf, 19, 39, 59, 79, Inf), 
                                                    labels=c("1-19", "20-39", "40-59", "60-79", "80+")))
 table(Lab.Samples$NBins)
 # 1-19 20-39 40-59 60-79   80+ 
-#   21    18     8     5     3 
+#   20    19     8     7     3  
 
 table(Lab.Samples$Admin)
+# Challenge   Priming 
+#        44        13
+
+table(Lab.Samples$ActPlac)
+table(Lab.Samples$ActPlac)/57
+# 0  1 
+#55  2 
+#96% 4%
+
+#Population
+Lab.Samples$Pop <- factor(Lab.Samples$Pop, levels=c("Light", "Heavy", "AUD"))
+table(Lab.Samples$Pop)
+#Light Heavy   AUD 
+#   24    19    14 
+
+
+#MeaDpM DriDpMks per MoDpMth
+SpDesc(Lab.Samples$DpM)
+# nbr.val         min         max      median        mean     SE.mean         var     std.dev 
+# 57.000000    5.600000  336.600000   51.400000   89.271369    9.363888 4997.896522   70.695803 
+Lab.DpM.Hist <- SpHist(Lab.Samples$DpM, bins=10)
+Lab.DpM.Hist
+ggsave(Lab.DpM.Hist, filename="Lab.DpM.Hist.png", width = 6, height = 5, dpi=300)
 
 
 #IMPORT RCT DATA----
