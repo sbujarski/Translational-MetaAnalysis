@@ -150,5 +150,8 @@ getmode <- function(v) {
 
 #IMPORT DATA----
 
-Lab <- read.xlsx()
+Lab <- read.xlsx("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/Lab Meta-Analysis Scored Data.xlsx", sheetName = "Study Data")
+RCT <- read.xlsx("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", sheetName = "Study Data")
+
+
 
