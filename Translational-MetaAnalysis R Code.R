@@ -11,7 +11,7 @@ library(dplyr) #Data Wrangling
 library(MAd) #agg function Implements Borenstein et al. (2009) approach for combining dependent ES and ES variances. Use Hedge's G
 library(metafor) #meta-regression pachage
 library(readxl) #package to import excel files directly
-
+library()
 
 
 #CUSTOM FUNCTIONS------
@@ -156,13 +156,49 @@ RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Re
                   sheet = "Study Data", na="NA")
 
 
-#Study Stats
+#CLEAN DATA----
+#Remove Self-Adminstration data
+Lab <- subset(Lab, Admin != "Self-Admin")
+
+
+
+#Study Stats----
 Papers.Lab <- subset(Lab, OutNum==1)
 
 dim(Papers.Lab)
 #55 studies
 
+#Year
+table(Papers.Lab$Year)
 SpDesc(Papers.Lab$Year)
 SpHist(Papers.Lab$Year, bins=10)
+Papers.Lab <- Papers.Lab %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1994, 1999, 2004, 2009, 2014, Inf), 
+                                     labels=c("-1994", "1995-1999", "2000-2004", "2005-2009", "2010-2014", "2015-")))
+table(Papers.Lab$YearBins)
+
+#Journal
+table(Papers.Lab$Journal)
+
+#Within Subjects Design
+table(Papers.Lab$WithinMed)
+table(Papers.Lab$WithinMed)/55
+#        0         1 
+#       19        36
+#0.3454545 0.6545455 
+
+#Sample Size
+SpDesc(Papers.Lab$N)
+#   nbr.val        min        max     median       mean    SE.mean        var    std.dev 
+# 55.000000  10.000000  90.000000  24.000000  31.345455   2.828453 440.008081  20.976370
+SpHist(Papers.Lab$N, bins = 10)
+Papers.Lab <- Papers.Lab %>% mutate(NBins = cut(N, breaks=c(-Inf, 19, 39, 59, 79, Inf), 
+                                                   labels=c("1-19", "20-39", "40-59", "60-79", "80+")))
+table(Papers.Lab$NBins)
+# 1-19 20-39 40-59 60-79   80+ 
+#   21    18     8     5     3 
+
+table(Papers.Lab$Admin)
+
+
 
 
