@@ -10,7 +10,7 @@ library(ggplot2) #Graphing
 library(dplyr) #Data Wrangling
 library(MAd) #agg function Implements Borenstein et al. (2009) approach for combining dependent ES and ES variances. Use Hedge's G
 library(metafor) #meta-regression pachage
-library(xlsx) #package to import xls files directly
+library(readxl) #package to import excel files directly
 
 
 
@@ -150,8 +150,19 @@ getmode <- function(v) {
 
 #IMPORT DATA----
 
-Lab <- read.xlsx("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/Lab Meta-Analysis Scored Data.xlsx", sheetName = "Study Data")
-RCT <- read.xlsx("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", sheetName = "Study Data")
+Lab <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/Lab Meta-Analysis Scored Data.xlsx", 
+                 sheet = "Study Data", na="NA")
+RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", 
+                  sheet = "Study Data", na="NA")
 
+
+#Study Stats
+Papers.Lab <- subset(Lab, OutNum==1)
+
+dim(Papers.Lab)
+#55 studies
+
+SpDesc(Papers.Lab$Year)
+SpHist(Papers.Lab$Year, bins=10)
 
 
