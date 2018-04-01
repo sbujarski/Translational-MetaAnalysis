@@ -148,57 +148,92 @@ getmode <- function(v) {
 }
 
 
-#IMPORT DATA----
+#IMPORT LAB DATA----
 
 Lab <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/Lab Meta-Analysis Scored Data.xlsx", 
                  sheet = "Study Data", na="NA")
-RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", 
-                  sheet = "Study Data", na="NA")
 
+#How many medications?
+length(table(Lab$Med))
+#24 meds
+#How many total effects
+sum(table(Lab$Med))
+#485
 
 #CLEAN DATA----
+
 #Remove Self-Adminstration data
-Lab <- subset(Lab, Admin != "Self-Admin")
+Lab.noSA <- subset(Lab, Admin != "Self-Admin")
+
+#How many medications? 24
+length(table(Lab.noSA$Med))
+#How many total effects - 451 - 34 effects lost
+sum(table(Lab.noSA$Med))
+
+table(Lab.noSA$Admin)
+#Challenge   Priming 
+#      359        92
+
+#exclude non main effects
+Lab.noSA.main <- subset(Lab.noSA, PredTerm=="Med")
+
+#How many medications? 24 - No medications lost
+length(table(Lab.noSA.main$Med))
+#How many total effects - 408 - 43 effects lost
+sum(table(Lab.noSA.main$Med))
+
+#How many studies? - 51
+length(table(Lab.noSA.main$ID))
+
+#How many samples? - 57
+length(table(Lab.noSA.main$Sample))
 
 
-
-#Study Stats----
-Papers.Lab <- subset(Lab, OutNum==1)
-
-dim(Papers.Lab)
-#55 studies
+#LAB STUDY STATS----
+#Select sample level data for summary tables
+Lab.Samples <- distinct(Lab.noSA.main[c("ID", "Sample", "Author", "Year", "Journal", "Med", "ActPlac", "MaxDose", "WithinMed", "Pharma",
+                                        "N", "Admin", "Pop", "DpM", "IndSample", "MaxAlcDose")])
+dim(Lab.Samples)
+str(Lab.Samples)
 
 #Year
-table(Papers.Lab$Year)
-SpDesc(Papers.Lab$Year)
-SpHist(Papers.Lab$Year, bins=10)
-Papers.Lab <- Papers.Lab %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1994, 1999, 2004, 2009, 2014, Inf), 
-                                     labels=c("-1994", "1995-1999", "2000-2004", "2005-2009", "2010-2014", "2015-")))
-table(Papers.Lab$YearBins)
+table(Lab.Samples$Year)
+SpDesc(Lab.Samples$Year)
+Lab.Years.Hist <- SpHist(Lab.Samples$Year, bins=10)
+Lab.Years.Hist
+ggsave(Lab.Years.Hist, filename="Lab.Years.Hist.png", width = 6, height = 5, dpi=300)
+
+#Making categories
+Lab.Samples <- Lab.Samples %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1994, 1999, 2004, 2009, 2014, Inf), 
+                                     labels=c("Pre 1995", "1995-1999", "2000-2004", "2005-2009", "2010-2014", "Post 2014")))
+table(Lab.Samples$YearBins)
 
 #Journal
-table(Papers.Lab$Journal)
+table(Lab.Samples$Journal)
 
 #Within Subjects Design
-table(Papers.Lab$WithinMed)
-table(Papers.Lab$WithinMed)/55
-#        0         1 
-#       19        36
-#0.3454545 0.6545455 
+table(Lab.Samples$WithinMed)
+table(Lab.Samples$WithinMed)/sum(table(Lab.Samples$WithinMed))
+#  0   1 
+# 22  33
+#0.4 0.6 
 
 #Sample Size
-SpDesc(Papers.Lab$N)
+SpDesc(Lab.Samples$N)
 #   nbr.val        min        max     median       mean    SE.mean        var    std.dev 
 # 55.000000  10.000000  90.000000  24.000000  31.345455   2.828453 440.008081  20.976370
-SpHist(Papers.Lab$N, bins = 10)
-Papers.Lab <- Papers.Lab %>% mutate(NBins = cut(N, breaks=c(-Inf, 19, 39, 59, 79, Inf), 
+SpHist(Lab.Samples$N, bins = 10)
+Lab.Samples <- Lab.Samples %>% mutate(NBins = cut(N, breaks=c(-Inf, 19, 39, 59, 79, Inf), 
                                                    labels=c("1-19", "20-39", "40-59", "60-79", "80+")))
-table(Papers.Lab$NBins)
+table(Lab.Samples$NBins)
 # 1-19 20-39 40-59 60-79   80+ 
 #   21    18     8     5     3 
 
-table(Papers.Lab$Admin)
+table(Lab.Samples$Admin)
 
 
+#IMPORT RCT DATA----
+RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", 
+                  sheet = "Study Data", na="NA")
 
 
