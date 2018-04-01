@@ -316,6 +316,7 @@ table(Lab.noSA.main$NoStat)/408
 #Are certain meds more common with no Stat
 table(Lab.noSA.main$Med, Lab.noSA.main$NoStat)
 #Paroxetine, rimonabant, zonisamide, Indomethacin have no reported stats!!
+Lab.noSA.main$NoStat.str <- ifelse(Lab.noSA.main$NoStat==1, "Stat Reported", "Stat Omitted")
 
 #Outcome domains
 table(Lab.noSA.main$OutDomain)
@@ -323,11 +324,21 @@ table(Lab.noSA.main$OutDomain)/408
 # Craving     NegMood    Sedation Stimulation 
 #      72          46         171         119 
 #     18%         11%         42%         29%
-OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=as.factor(NoStat)), width = 0.8) + 
+OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoStat.str), width = 0.8) + 
   ggtitle("Number of Effect Sizes Per Domain") + 
   scale_x_discrete("Outcome Domain") +
-  SpTheme(legend.position = "right")
+  SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 OutDomain.plot
+ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
+
+
+#META-ANALYSIS OF LABORATORY OUTCOMES----
+
+#Center Covariates----
+#Admin - dummy code center at challenge
+Lab.noSA.main
+
+
 
 
 
