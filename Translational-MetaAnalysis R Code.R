@@ -11,7 +11,7 @@ library(dplyr) #Data Wrangling
 library(MAd) #agg function Implements Borenstein et al. (2009) approach for combining dependent ES and ES variances. Use Hedge's G
 library(metafor) #meta-regression pachage
 library(readxl) #package to import excel files directly
-library()
+
 
 
 #CUSTOM FUNCTIONS------
@@ -35,7 +35,7 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
     
     ggplot(data=rawdata, aes(x=es, y=es.se))+
       geom_line(data=CI95line, aes(x=x, y=y), linetype="dashed", size=1)+
-      #geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.3)+
+      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1)+
       geom_vline(xintercept=mean.effect, size=1)+
       geom_vline(xintercept=0, linetype="dotted", size=1)+
       geom_point(size=3, aes(colour=lab))+
@@ -43,9 +43,9 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
       ggtitle(title)+
       xlab(x.lab)+
       ylab(y.lab)+
-      theme_bw()+
+      SpTheme()+
       scale_y_reverse()+
-      guides(colour=guide_legend(title=labsName))
+      guides(colour=guide_legend(title=labsTitle))
   }
   else
   {
@@ -61,14 +61,14 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
     
     ggplot(data=rawdata, aes(x=es, y=es.se))+
       geom_line(data=CI95line, aes(x=x, y=y), linetype="dashed", size=1)+
-      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.3)+
+      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1)+
       geom_vline(xintercept=mean.effect, size=1)+
       geom_vline(xintercept=0, linetype="dotted", size=1)+
       geom_point(size=3)+
       ggtitle(title)+
       xlab(x.lab)+
       ylab(y.lab)+
-      theme_bw()+
+      SpTheme()+
       scale_y_reverse()
   }
 }
@@ -336,8 +336,115 @@ ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi
 
 #Center Covariates----
 #Admin - dummy code center at challenge
-Lab.noSA.main
+Lab.noSA.main$Admin.C <- ifelse(Lab.noSA.main$Admin=="Challenge", 0, 1)
+table(Lab.noSA.main$Admin, Lab.noSA.main$Admin.C)
+Lab.Samples$Admin.C <- ifelse(Lab.Samples$Admin=="Challenge", 0, 1)
+table(Lab.Samples$Admin, Lab.Samples$Admin.C)
 
+#logDPM - center at - 100 drinks per month
+Lab.noSA.main$logDpM.C <- Lab.noSA.main$logDpM - log(100)
+SpDesc(Lab.noSA.main[c("logDpM", "logDpM.C")])
+Lab.Samples$logDpM.C <- Lab.Samples$logDpM - log(100)
+SpDesc(Lab.Samples[c("logDpM", "logDpM.C")])
+
+#MaxAlcDose - center at 0.06
+Lab.noSA.main$MaxAlcDose.C <- Lab.noSA.main$MaxAlcDose - 0.06
+SpDesc(Lab.noSA.main[c("MaxAlcDose", "MaxAlcDose.C")])
+Lab.Samples$MaxAlcDose.C <- Lab.Samples$MaxAlcDose - 0.06
+SpDesc(Lab.Samples[c("MaxAlcDose", "MaxAlcDose.C")])
+
+#MaxDose - logbase2 center at modal dose of that medication (e.g. med with modal 50mg, 100 = 2, 25 = 0.5)
+Lab.noSA.main$MaxDose.C <- NA
+for(i in 1:dim(Lab.noSA.main)[1]){
+  Lab.noSA.main$MaxDose.C[i] <- log(Lab.noSA.main$MaxDose[i] / getmode(subset(Lab.noSA.main,Med==Lab.noSA.main$Med[i])$MaxDose), 2)
+}
+SpHist(Lab.noSA.main$MaxDose.C)
+Lab.Samples$MaxDose.C <- NA
+for(i in 1:dim(Lab.Samples)[1]){
+  Lab.Samples$MaxDose.C[i] <- log(Lab.Samples$MaxDose[i] / getmode(subset(Lab.Samples,Med==Lab.Samples$Med[i])$MaxDose), 2)
+}
+SpHist(Lab.Samples$MaxDose.C)
+
+#CRAVING OUTCOME - Conservative Approach (no stat = 0)----
+
+#Subset Craving Outcomes
+Lab.Craving <- subset(Lab.noSA.main, OutDomain=="Craving")
+#reset levels of Med and Sample
+Lab.Craving$Med <- factor(Lab.Craving$Med)
+Lab.Craving$Sample <- factor(Lab.Craving$Sample)
+
+#checks
+dim(Lab.Craving) #72 effect sizes
+table(Lab.Craving$Med)
+length(table(Lab.Craving$Med)) #18 medications with craving outcomes
+table(Lab.Craving$Sample) #which studies gave data
+#Number of samples with craving data
+length(levels(Lab.Craving$Sample)) # 43 samples with craving outcomes
+
+
+#Aggregate craving effect sizes
+Lab.Craving.ES <- agg(data=Lab.Craving, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Craving.ES)[names(Lab.Craving.ES)=="id"] <- "Sample"
+dim(Lab.Craving.ES)
+
+#merge aggregated effect sizes with 
+dim(Lab.Craving.ES)
+dim(Lab.Samples)
+Lab.Craving.ES <- inner_join(Lab.Craving.ES, Lab.Samples, by="Sample")
+dim(Lab.Craving.ES) #43 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Craving.ES$Med <- factor(Lab.Craving.ES$Med)
+Lab.Craving.ES$Sample <- factor(Lab.Craving.ES$Sample)
+
+#count number of Craving outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Craving.ES)[1])
+{
+  Lab.Craving.ES$Outcomes[i] <- nrow(subset(Lab.Craving, Sample==Lab.Craving.ES$Sample[i]))
+}
+
+
+#Craving - RMA Analyses----
+rma.Craving<- rma.recenterMed.Lab(Lab.Craving.ES, abr="Cr.")
+
+#Craving - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Craving$rma.uncent,
+           slab = paste(Lab.Craving.ES$Author, Lab.Craving.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Craving.ES$Med), Lab.Craving.ES$MaxDose, round(Lab.Craving.ES$DpM, 1), round(Lab.Craving.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-3.3, -2.4, 1.2, 1.8),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Craving.ES$Med),
+           xlab="Hedge's G")
+text(-4.9, 45, "Author(s) and Year", pos = 4, cex=.6)
+text(-3.3, 45, "Medication", pos = 4, cex=.6)
+text(-2.4, 45, "Dose", pos = 4, cex=.6)
+text(1.2, 45, "DpM", pos = 4, cex=.6)
+text(1.8, 45, "BrAC", pos = 4, cex=.6)
+text(2.6, 45, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 47, "Alcohol Craving")
+
+#funnel plot
+Craving.Funnel <- gg.funnel(es=Lab.Craving.ES$es, es.var=Lab.Craving.ES$var, 
+          mean.effect=rma.Craving$ES.mean, se.effect=rma.Craving$ES.SEM,
+          title="Lab Outcomes - Alcohol Craving", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+          lab=factor(Lab.Craving.ES$Med), labsTitle="Medication")
+Craving.Funnel
+ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -1.2902, p = 0.1970
+
+
+#Save Medication Values
+Trans.ES <- rma.Craving$ES.est
 
 
 
