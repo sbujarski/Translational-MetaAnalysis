@@ -539,6 +539,89 @@ Full.ES <- full_join(Full.ES, rma.Stimulation$ES.est, by="Med")
 
 
 
+#SEDATION OUTCOME - Conservative Approach (no stat = 0)----
+
+#Subset Sedation Outcomes
+Lab.Sedation <- subset(Lab.noSA.main, OutDomain=="Sedation")
+#reset levels of Med and Sample
+Lab.Sedation$Med <- factor(Lab.Sedation$Med)
+Lab.Sedation$Sample <- factor(Lab.Sedation$Sample)
+
+#checks
+dim(Lab.Sedation) #171 effect sizes
+table(Lab.Sedation$Med)
+length(table(Lab.Sedation$Med)) #23 medications with Sedation outcomes
+table(Lab.Sedation$Sample) #which samples gave data
+#Number of samples with Sedation data
+length(levels(Lab.Sedation$Sample)) # 53 samples with Sedation outcomes
+
+
+#Aggregate Sedation effect sizes
+Lab.Sedation.ES <- agg(data=Lab.Sedation, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Sedation.ES)[names(Lab.Sedation.ES)=="id"] <- "Sample"
+dim(Lab.Sedation.ES)
+
+#merge aggregated effect sizes with 
+dim(Lab.Sedation.ES)
+dim(Lab.Samples)
+Lab.Sedation.ES <- inner_join(Lab.Sedation.ES, Lab.Samples, by="Sample")
+dim(Lab.Sedation.ES) #53 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Sedation.ES$Med <- factor(Lab.Sedation.ES$Med)
+Lab.Sedation.ES$Sample <- factor(Lab.Sedation.ES$Sample)
+
+#count number of Sedation outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Sedation.ES)[1])
+{
+  Lab.Sedation.ES$Outcomes[i] <- nrow(subset(Lab.Sedation, Sample==Lab.Sedation.ES$Sample[i]))
+}
+
+
+#Sedation - RMA Analyses
+rma.Sedation<- rma.recenterMed.Lab(Lab.Sedation.ES, abr="Se.")
+
+#Sedation - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Sedation$rma.uncent,
+           slab = paste(Lab.Sedation.ES$Author, Lab.Sedation.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Sedation.ES$Med), Lab.Sedation.ES$MaxDose, round(Lab.Sedation.ES$DpM, 1), round(Lab.Sedation.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-2.7, -1.7, 2, 2.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Sedation.ES$Med),
+           xlab="Hedge's G")
+text(-4.25, 56, "Author(s) and Year", pos = 4, cex=.6)
+text(-2.7, 56, "Medication", pos = 4, cex=.6)
+text(-1.7, 56, "Dose", pos = 4, cex=.6)
+text(2, 56, "DpM", pos = 4, cex=.6)
+text(2.7, 56, "BrAC", pos = 4, cex=.6)
+text(3.3, 56, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 57.5, "Alcohol Sedation")
+
+#funnel plot
+Sedation.Funnel <- gg.funnel(es=Lab.Sedation.ES$es, es.var=Lab.Sedation.ES$var, 
+                                mean.effect=rma.Sedation$ES.mean, se.effect=rma.Sedation$ES.SEM,
+                                title="Lab Outcomes - Alcohol Sedation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                                lab=factor(Lab.Sedation.ES$Med), labsTitle="Medication")
+Sedation.Funnel
+
+ggsave(Sedation.Funnel, filename="Sedation.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Sedation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 0.0903, p = 0.9280
+
+
+#Save Medication Values
+Full.ES <- full_join(Full.ES, rma.Sedation$ES.est, by="Med")
+
+
 
 
 #IMPORT RCT DATA----
