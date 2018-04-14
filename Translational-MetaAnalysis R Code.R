@@ -213,7 +213,7 @@ table(Lab.Samples$Year)
 SpDesc(Lab.Samples$Year)
 Lab.Years.Hist <- SpHist(Lab.Samples$Year, bins=10)
 Lab.Years.Hist
-ggsave(Lab.Years.Hist, filename="Lab.Years.Hist.png", width = 6, height = 5, dpi=300)
+#ggsave(Lab.Years.Hist, filename="Lab.Years.Hist.png", width = 6, height = 5, dpi=300)
 
 #Making categories
 Lab.Samples <- Lab.Samples %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1994, 1999, 2004, 2009, 2014, Inf), 
@@ -238,7 +238,7 @@ SpDesc(Lab.Samples$N)
 # 57.000000  10.000000  90.000000  25.000000  32.929825   2.894106 477.423559  21.850024 
 Lab.N.Hist <- SpHist(Lab.Samples$N, bins=10)
 Lab.N.Hist
-ggsave(Lab.N.Hist, filename="Lab.N.Hist.png", width = 6, height = 5, dpi=300)
+#ggsave(Lab.N.Hist, filename="Lab.N.Hist.png", width = 6, height = 5, dpi=300)
 
 Lab.Samples <- Lab.Samples %>% mutate(NBins = cut(N, breaks=c(-Inf, 19, 39, 59, 79, Inf), 
                                                    labels=c("1-19", "20-39", "40-59", "60-79", "80+")))
@@ -274,7 +274,7 @@ SpDesc(Lab.Samples$DpM)
 # 57.000000    5.600000  336.600000   51.400000   89.271369    9.363888 4997.896522   70.695803 
 Lab.DpM.Hist <- SpHist(Lab.Samples$DpM, bins=10)
 Lab.DpM.Hist
-ggsave(Lab.DpM.Hist, filename="Lab.DpM.Hist.png", width = 6, height = 5, dpi=300)
+#ggsave(Lab.DpM.Hist, filename="Lab.DpM.Hist.png", width = 6, height = 5, dpi=300)
 #qq plot to look for normality of DpM
 SpQQPlot(Lab.Samples$DpM)
 shapiro.test(Lab.Samples$DpM) #p < 0.0001
@@ -291,7 +291,7 @@ SpDesc(Lab.Samples$MaxAlcDose)
 # 5.700000e+01 1.000000e-02 1.150000e-01 6.000000e-02 6.032523e-02 3.354349e-03 6.413445e-04 2.532478e-02 
 Lab.MaxAlcDose.Hist <- SpHist(Lab.Samples$MaxAlcDose, bins=10)
 Lab.MaxAlcDose.Hist
-ggsave(Lab.MaxAlcDose.Hist, filename="Lab.MaxAlcDose.Hist.png", width = 6, height = 5, dpi=300)
+#ggsave(Lab.MaxAlcDose.Hist, filename="Lab.MaxAlcDose.Hist.png", width = 6, height = 5, dpi=300)
 #qq plot to look for normality of DpM
 SpQQPlot(Lab.Samples$MaxAlcDose)
 shapiro.test(Lab.Samples$MaxAlcDose) #p .06541
@@ -326,7 +326,7 @@ OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoSt
   scale_x_discrete("Outcome Domain") +
   SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 OutDomain.plot
-ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
+#ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
 
 Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill=NoStat.str), width=0.8) +
   ggtitle("Number of Effect Sizes Per Medication") + 
@@ -334,7 +334,7 @@ Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill
   coord_flip() + 
   SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 Medication.NOutcomes.Plot
-ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 5, height = 9, dpi = 300)
+#ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 5, height = 9, dpi = 300)
 
 
 #META-ANALYSIS OF LABORATORY OUTCOMES----
@@ -436,7 +436,7 @@ Craving.Funnel <- gg.funnel(es=Lab.Craving.ES$es, es.var=Lab.Craving.ES$var,
           title="Lab Outcomes - Alcohol Craving", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
           lab=factor(Lab.Craving.ES$Med), labsTitle="Medication")
 Craving.Funnel
-ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
+#ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
 regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
