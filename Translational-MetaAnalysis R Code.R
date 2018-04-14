@@ -294,9 +294,8 @@ Lab.MaxAlcDose.Hist
 ggsave(Lab.MaxAlcDose.Hist, filename="Lab.MaxAlcDose.Hist.png", width = 6, height = 5, dpi=300)
 #qq plot to look for normality of DpM
 SpQQPlot(Lab.Samples$MaxAlcDose)
-shapiro.test(Lab.Samples$MaxAlcDose) #p < 0.0001
-SpQQPlot(log(Lab.Samples$MaxAlcDose))
-shapiro.test(log(Lab.Samples$DpM)) #p = 0.06541
+shapiro.test(Lab.Samples$MaxAlcDose) #p .06541
+
 
 
 #Effect size summaries
@@ -328,6 +327,13 @@ OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoSt
   SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 OutDomain.plot
 ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
+
+Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill=NoStat.str), width=0.8) +
+  ggtitle("Number of Effect Sizes Per Medication") + 
+  scale_x_discrete("Medication") +
+  SpTheme(legend.position = "right") + theme(legend.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1))
+Medication.NOutcomes.Plot
+ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 9, height = 5, dpi = 300)
 
 
 #META-ANALYSIS OF LABORATORY OUTCOMES----
