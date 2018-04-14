@@ -313,7 +313,7 @@ table(Lab.noSA.main$NoStat)/408
 #Are certain meds more common with no Stat
 table(Lab.noSA.main$Med, Lab.noSA.main$NoStat)
 #Paroxetine, rimonabant, zonisamide, Indomethacin have no reported stats!!
-Lab.noSA.main$NoStat.str <- ifelse(Lab.noSA.main$NoStat==1, "Stat Reported", "Stat Omitted")
+Lab.noSA.main$NoStat.str <- ifelse(Lab.noSA.main$NoStat==0, "Stat Reported", "Stat Omitted")
 
 #Outcome domains
 table(Lab.noSA.main$OutDomain)
@@ -331,9 +331,10 @@ ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi
 Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill=NoStat.str), width=0.8) +
   ggtitle("Number of Effect Sizes Per Medication") + 
   scale_x_discrete("Medication") +
-  SpTheme(legend.position = "right") + theme(legend.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1))
+  coord_flip() + 
+  SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 Medication.NOutcomes.Plot
-ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 9, height = 5, dpi = 300)
+ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 5, height = 9, dpi = 300)
 
 
 #META-ANALYSIS OF LABORATORY OUTCOMES----
