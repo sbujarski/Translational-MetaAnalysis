@@ -35,7 +35,7 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
     
     ggplot(data=rawdata, aes(x=es, y=es.se))+
       geom_line(data=CI95line, aes(x=x, y=y), linetype="dashed", size=1)+
-      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1)+
+      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1, fill="black")+
       geom_vline(xintercept=mean.effect, size=1)+
       geom_vline(xintercept=0, linetype="dotted", size=1)+
       geom_point(size=3, aes(colour=lab))+
@@ -61,7 +61,7 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
     
     ggplot(data=rawdata, aes(x=es, y=es.se))+
       geom_line(data=CI95line, aes(x=x, y=y), linetype="dashed", size=1)+
-      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1)+
+      geom_polygon(data=CI95shade, aes(x=x, y=y), alpha=.1, fill="black")+
       geom_vline(xintercept=mean.effect, size=1)+
       geom_vline(xintercept=0, linetype="dotted", size=1)+
       geom_point(size=3)+
@@ -382,7 +382,7 @@ Lab.Craving$Sample <- factor(Lab.Craving$Sample)
 dim(Lab.Craving) #72 effect sizes
 table(Lab.Craving$Med)
 length(table(Lab.Craving$Med)) #18 medications with craving outcomes
-table(Lab.Craving$Sample) #which studies gave data
+table(Lab.Craving$Sample) #which samples gave data
 #Number of samples with craving data
 length(levels(Lab.Craving$Sample)) # 43 samples with craving outcomes
 
@@ -410,7 +410,7 @@ for (i in 1:dim(Lab.Craving.ES)[1])
 }
 
 
-#Craving - RMA Analyses----
+#Craving - RMA Analyses
 rma.Craving<- rma.recenterMed.Lab(Lab.Craving.ES, abr="Cr.")
 
 #Craving - Forest Plot
@@ -449,7 +449,94 @@ regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 
 
 #Save Medication Values
-Trans.ES <- rma.Craving$ES.est
+Full.ES <- rma.Craving$ES.est
+
+
+
+#STIMULATION OUTCOME - Conservative Approach (no stat = 0)----
+
+#Subset Stimulation Outcomes
+Lab.Stimulation <- subset(Lab.noSA.main, OutDomain=="Stimulation")
+#reset levels of Med and Sample
+Lab.Stimulation$Med <- factor(Lab.Stimulation$Med)
+Lab.Stimulation$Sample <- factor(Lab.Stimulation$Sample)
+
+#checks
+dim(Lab.Stimulation) #119 effect sizes
+table(Lab.Stimulation$Med)
+length(table(Lab.Stimulation$Med)) #24 medications with Stimulation outcomes
+table(Lab.Stimulation$Sample) #which samples gave data
+#Number of samples with Stimulation data
+length(levels(Lab.Stimulation$Sample)) # 50 samples with Stimulation outcomes
+
+
+#Aggregate Stimulation effect sizes
+Lab.Stimulation.ES <- agg(data=Lab.Stimulation, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Stimulation.ES)[names(Lab.Stimulation.ES)=="id"] <- "Sample"
+dim(Lab.Stimulation.ES)
+
+#merge aggregated effect sizes with 
+dim(Lab.Stimulation.ES)
+dim(Lab.Samples)
+Lab.Stimulation.ES <- inner_join(Lab.Stimulation.ES, Lab.Samples, by="Sample")
+dim(Lab.Stimulation.ES) #50 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Stimulation.ES$Med <- factor(Lab.Stimulation.ES$Med)
+Lab.Stimulation.ES$Sample <- factor(Lab.Stimulation.ES$Sample)
+
+#count number of Stimulation outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Stimulation.ES)[1])
+{
+  Lab.Stimulation.ES$Outcomes[i] <- nrow(subset(Lab.Stimulation, Sample==Lab.Stimulation.ES$Sample[i]))
+}
+
+
+#Stimulation - RMA Analyses
+rma.Stimulation<- rma.recenterMed.Lab(Lab.Stimulation.ES, abr="St.")
+
+#Stimulation - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Stimulation$rma.uncent,
+           slab = paste(Lab.Stimulation.ES$Author, Lab.Stimulation.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Stimulation.ES$Med), Lab.Stimulation.ES$MaxDose, round(Lab.Stimulation.ES$DpM, 1), round(Lab.Stimulation.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-4.5, -3, 3.8, 4.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Stimulation.ES$Med),
+           xlab="Hedge's G")
+text(-7.3, 53, "Author(s) and Year", pos = 4, cex=.6)
+text(-4.5, 53, "Medication", pos = 4, cex=.6)
+text(-3, 53, "Dose", pos = 4, cex=.6)
+text(3.8, 53, "DpM", pos = 4, cex=.6)
+text(4.7, 53, "BrAC", pos = 4, cex=.6)
+text(6, 53, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 54.5, "Alcohol Stimulation")
+
+#funnel plot
+Stimulation.Funnel <- gg.funnel(es=Lab.Stimulation.ES$es, es.var=Lab.Stimulation.ES$var, 
+                            mean.effect=rma.Stimulation$ES.mean, se.effect=rma.Stimulation$ES.SEM,
+                            title="Lab Outcomes - Alcohol Stimulation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(Lab.Stimulation.ES$Med), labsTitle="Medication")
+Stimulation.Funnel + annotate("rect", xmin = rma.Stimulation$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+
+
+
+ggsave(Stimulation.Funnel, filename="Stimulation.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Stimulation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -0.1636, p = 0.8701
+
+
+#Save Medication Values
+Full.ES <- full_join(Full.ES, rma.Stimulation$ES.est, by="Med")
+
 
 
 
