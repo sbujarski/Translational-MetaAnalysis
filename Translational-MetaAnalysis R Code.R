@@ -370,6 +370,8 @@ for(i in 1:dim(Lab.Samples)[1]){
 }
 SpHist(Lab.Samples$MaxDose.C)
 
+
+
 #CRAVING OUTCOME - Conservative Approach (no stat = 0)----
 
 #Subset Craving Outcomes
@@ -621,6 +623,89 @@ regtest(rma.Sedation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.Sedation$ES.est, by="Med")
 
+
+
+#NEGMOOD OUTCOME - Conservative Approach (no stat = 0)----
+
+#Subset NegMood Outcomes
+Lab.NegMood <- subset(Lab.noSA.main, OutDomain=="NegMood")
+#reset levels of Med and Sample
+Lab.NegMood$Med <- factor(Lab.NegMood$Med)
+Lab.NegMood$Sample <- factor(Lab.NegMood$Sample)
+
+#checks
+dim(Lab.NegMood) #46 effect sizes
+table(Lab.NegMood$Med)
+length(table(Lab.NegMood$Med)) #12 medications with NegMood outcomes
+table(Lab.NegMood$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(Lab.NegMood$Sample)) # 21 samples with NegMood outcomes
+
+
+#Aggregate NegMood effect sizes
+Lab.NegMood.ES <- agg(data=Lab.NegMood, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.NegMood.ES)[names(Lab.NegMood.ES)=="id"] <- "Sample"
+dim(Lab.NegMood.ES)
+
+#merge aggregated effect sizes with 
+dim(Lab.NegMood.ES)
+dim(Lab.Samples)
+Lab.NegMood.ES <- inner_join(Lab.NegMood.ES, Lab.Samples, by="Sample")
+dim(Lab.NegMood.ES) #21 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.NegMood.ES$Med <- factor(Lab.NegMood.ES$Med)
+Lab.NegMood.ES$Sample <- factor(Lab.NegMood.ES$Sample)
+
+#count number of NegMood outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.NegMood.ES)[1])
+{
+  Lab.NegMood.ES$Outcomes[i] <- nrow(subset(Lab.NegMood, Sample==Lab.NegMood.ES$Sample[i]))
+}
+
+
+#NegMood - RMA Analyses
+rma.NegMood<- rma.recenterMed.Lab(Lab.NegMood.ES, abr="NM.")
+
+#NegMood - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.NegMood$rma.uncent,
+           slab = paste(Lab.NegMood.ES$Author, Lab.NegMood.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.NegMood.ES$Med), Lab.NegMood.ES$MaxDose, round(Lab.NegMood.ES$DpM, 1), round(Lab.NegMood.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-2.2, -1.2, 2, 2.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.NegMood.ES$Med),
+           xlab="Hedge's G")
+text(-4, 23, "Author(s) and Year", pos = 4, cex=1)
+text(-2.2, 23, "Medication", pos = 4, cex=1)
+text(-1.2, 23, "Dose", pos = 4, cex=1)
+text(2, 23, "DpM", pos = 4, cex=1)
+text(2.7, 23, "BrAC", pos = 4, cex=1)
+text(3.3, 23, "Hedge's G [95% CI]", pos = 4, cex=1)
+text(0, 24.5, "Alcohol Negative Mood", cex=1.1)
+
+#funnel plot
+NegMood.Funnel <- gg.funnel(es=Lab.NegMood.ES$es, es.var=Lab.NegMood.ES$var, 
+                             mean.effect=rma.NegMood$ES.mean, se.effect=rma.NegMood$ES.SEM,
+                             title="Lab Outcomes - Alcohol NegMood", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                             lab=factor(Lab.NegMood.ES$Med), labsTitle="Medication")
+NegMood.Funnel+ annotate("rect", xmin = rma.NegMood$ES.mean+1.96*0.4, xmax = 1.3, ymin = 0, ymax = 0.4, alpha = .1, fill="black")
+
+ggsave(NegMood.Funnel, filename="NegMood.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.NegMood$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 0.4742, p = 0.6353
+
+
+#Save Medication Values
+Full.ES <- full_join(Full.ES, rma.NegMood$ES.est, by="Med")
 
 
 
