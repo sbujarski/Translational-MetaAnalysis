@@ -285,8 +285,6 @@ Lab.Samples$logDpM <- log(Lab.Samples$DpM)
 Lab.noSA.main$logDpM <- log(Lab.noSA.main$DpM)
 
 
-
-
 #Max Alcohol Dose
 SpDesc(Lab.Samples$MaxAlcDose)
 # nbr.val          min          max       median         mean      SE.mean          var      std.dev 
