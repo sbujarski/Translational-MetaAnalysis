@@ -160,7 +160,7 @@ length(table(Lab$Med))
 sum(table(Lab$Med))
 #485
 
-#CLEAN DATA----
+#CLEAN LAB DATA----
 
 #Remove Self-Adminstration data
 Lab.noSA <- subset(Lab, Admin != "Self-Admin")
@@ -712,5 +712,161 @@ Full.ES <- full_join(Full.ES, rma.NegMood$ES.est, by="Med")
 #IMPORT RCT DATA----
 RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Review Trans Addict Med/Meta Analysis/RCT Meta-Analysis Scored Data.xlsx", 
                   sheet = "Study Data", na="NA")
+
+#How many medications?
+length(table(RCT$Med))
+#20 meds
+#How many total effects
+sum(table(RCT$Med))
+#792
+
+
+#CLEAN RCT DATA----
+
+#Mean Impute DpM
+mean(RCT$DpM, na.rm=T)
+#266.4015
+
+RCT$DpM <-ifelse(is.na(RCT$DpM), 266.4015, RCT$DpM)
+
+str(RCT)
+
+#delete rows from cochrane reviewed studies where the review did not include the outcome of interest
+RCT.Clean <- subset(RCT, !is.na(NoStat))
+dim(RCT.Clean) #664 effect sizes
+
+#RCT STUDY STATS----
+#Select sample level data for summary tables
+RCT.Samples <- distinct(RCT[c("ID", "Cochrane", "Sample", "Author", "Year", "Journal", "Med", "ActPlac", "MaxDose", "Pharma",
+                                        "N", "DpM", "Location", "AbsReq", "DepReq", "TrxDur", "FUDur")])
+
+dim(RCT.Samples) #132 samples
+str(RCT.Samples)
+
+#Medication
+length(table(RCT.Samples$Med))
+#20 total medications
+
+table(RCT.Samples$Med)
+#  Acamprosate  Aripiprazole      Baclofen Carbamazepine    Divalproex    Gabapentin Levetiracetam     Memantine     Nalmefene    Naltrexone 
+#           29             1             7             1             1             6             5             1             7            43 
+#   Olanzapine   Ondansetron    Quetiapine    Rimonabant    Ritanserin    Sertraline    Topiramate     Valproate   Varenicline    Zonisamide 
+#            2             3             5             1             3             1             9             2             4             1 
+
+table(RCT.Samples$Cochrane)
+# 0  1 
+#56 76
+
+
+#Year
+table(RCT.Samples$Year)
+SpDesc(RCT.Samples$Year)
+# nbr.val          min          max       median         mean      SE.mean          var      std.dev 
+# 132.0000000 1985.0000000 2016.0000000 2006.0000000 2005.5151515    0.5798973   44.3890817    6.6625132 
+RCT.Years.Hist <- SpHist(RCT.Samples$Year, bins=10)
+RCT.Years.Hist
+#ggsave(RCT.Years.Hist, filename="RCT.Years.Hist.png", width = 6, height = 5, dpi=300)
+
+#Making categories
+RCT.Samples <- RCT.Samples %>% mutate(YearBins = cut(Year, breaks=c(-Inf, 1989, 1994, 1999, 2004, 2009, 2014, Inf), 
+                                                     labels=c("Pre 1990", "1990-1994", "1995-1999", "2000-2004", "2005-2009", "2010-2014", "Post 2014")))
+table(RCT.Samples$YearBins)
+# Pre 1990 1990-1994 1995-1999 2000-2004 2005-2009 2010-2014 Post 2014 
+#        1         5        19        33        33        30        11 
+
+
+#ActPlac
+table(RCT.Samples$ActPlac)
+#  0   1 
+#129   3 
+
+
+#Pharma
+table(RCT.Samples$Pharma)
+# 0  1 
+#58 59 
+
+
+#N
+table(RCT.Samples$N)
+SpDesc(RCT.Samples$N)
+#    nbr.val         min         max      median        mean     SE.mean         var     std.dev 
+#  132.00000    10.00000  1383.00000   119.50000   183.97727    18.32964 44348.77047   210.59148
+RCT.N.Hist <- SpHist(RCT.Samples$N, bins=20)
+RCT.N.Hist + scale_x_continuous("N", breaks=seq(0,1400,200))
+#ggsave(RCT.N.Hist, filename="RCT.N.Hist.png", width = 6, height = 5, dpi=300)
+#Making categories
+RCT.Samples <- RCT.Samples %>% mutate(NBins = cut(N, breaks=c(-Inf, 99, 199, 299, 399, 499, 599, Inf), 
+                                                     labels=c("< 100", "100-199", "200-299", "300-399", "400-499", "500-599", ">600")))
+table(RCT.Samples$NBins)
+#  < 100 100-199 200-299 300-399 400-499 500-599    >600 
+#     55      37      21       5       5       3       6 
+
+
+#DpM
+SpDesc(RCT.Samples$DpM)
+#    nbr.val         min         max      median        mean     SE.mean         var     std.dev 
+# 147.000000   68.600000  771.400000  266.401500  260.255201    8.181048 9838.643817   99.189938 
+RCT.DpM.Hist <- SpHist(RCT.Samples$DpM, bins=15)
+RCT.DpM.Hist
+#ggsave(RCT.DpM.Hist, filename="RCT.DpM.Hist.png", width = 6, height = 5, dpi=300)
+
+
+#AbsReq
+table(RCT.Samples$AbsReq)
+# 0  1 
+#81 36
+
+
+#DepReq
+table(RCT.Samples$DepReq)
+#  0   1 
+#  8 123 
+
+
+#TrxDur
+SpDesc(RCT.Samples$TrxDur)
+#    nbr.val         min         max      median        mean     SE.mean         var     std.dev 
+#132.0000000   4.0000000  52.0000000  12.0000000  15.5530303   0.8290299  90.7223572   9.5248285
+RCT.TrxDur.Hist <- SpHist(RCT.Samples$TrxDur, bins=15)
+RCT.TrxDur.Hist
+#ggsave(RCT.TrxDur.Hist, filename="RCT.TrxDur.Hist.png", width = 6, height = 5, dpi=300)
+RCT.Samples <- RCT.Samples %>% mutate(TrxDurBins = cut(TrxDur, breaks=c(-Inf, 6, 10, 14, 18, 22, 26, Inf), 
+                                                  labels=c("<7", "7-10", "11-14", "15-18", "19-22", "23-26", ">26")))
+table(RCT.Samples$TrxDurBins)
+#   <7  7-10 11-14 15-18 19-22 23-26   >26 
+#    6     4    90     6     1    18     7
+
+
+
+#FUDur
+SpDesc(RCT.Samples$FUDur)
+#   nbr.val        min        max     median       mean    SE.mean        var    std.dev 
+#123.000000   7.000000 104.000000  12.000000  22.691057   1.786787 392.690657  19.816424 
+RCT.FUDur.Hist <- SpHist(RCT.Samples$FUDur, bins=15)
+RCT.FUDur.Hist
+#ggsave(RCT.FUDur.Hist, filename="RCT.FUDur.Hist.png", width = 6, height = 5, dpi=300)
+RCT.Samples <- RCT.Samples %>% mutate(FUDurBins = cut(FUDur, breaks=c(-Inf, 12, 24, 36, 48, 60, 72, Inf)))
+table(RCT.Samples$FUDurBins)
+#(-Inf,12]   (12,24]   (24,36]   (36,48]   (48,60]   (60,72] (72, Inf] 
+#       66        23         9         2        12         2         4
+
+
+#Effect size summaries
+
+#total number of effects: 664
+length(RCT.Clean$ES)
+
+#Number of effects with no stat reported:
+table(RCT.Clean$NoStat)
+table(RCT.Clean$NoStat)/664
+#   0   1 
+# 337 327 
+# 51% 49% 
+
+#How many meds have each outcome?
+table(RCT.Clean$Med, RCT.Clean$OutName)
+table(RCT.Clean$Med, RCT.Clean$OutDomain)
+
 
 
