@@ -321,6 +321,7 @@ table(Lab.noSA.main$OutDomain)/408
 # Craving     NegMood    Sedation Stimulation 
 #      72          46         171         119 
 #     18%         11%         42%         29%
+
 OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoStat.str), width = 0.8) + 
   ggtitle("Number of Effect Sizes Per Domain") + 
   scale_x_discrete("Outcome Domain") +
@@ -328,9 +329,10 @@ OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoSt
 OutDomain.plot
 #ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
 
+Lab.noSA.main$Med <- factor(Lab.noSA.main$Med)
 Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill=NoStat.str), width=0.8) +
   ggtitle("Number of Effect Sizes Per Medication") + 
-  scale_x_discrete("Medication") +
+  scale_x_discrete("Medication", limits = rev(levels(Lab.noSA.main$Med))) +
   coord_flip() + 
   SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 Medication.NOutcomes.Plot
@@ -339,7 +341,7 @@ Medication.NOutcomes.Plot
 
 #META-ANALYSIS OF LABORATORY OUTCOMES----
 
-#Center Covariates----
+#Center Covariates
 #Admin - dummy code center at challenge
 Lab.noSA.main$Admin.C <- ifelse(Lab.noSA.main$Admin=="Challenge", 0, 1)
 table(Lab.noSA.main$Admin, Lab.noSA.main$Admin.C)
@@ -868,5 +870,13 @@ table(RCT.Clean$NoStat)/664
 table(RCT.Clean$Med, RCT.Clean$OutName)
 table(RCT.Clean$Med, RCT.Clean$OutDomain)
 
-
+RCT.Clean$Cochrane.Str <- ifelse(RCT.Clean$Cochrane==1, "Cochrane", "Non-Cochrane")
+RCT.Clean$Med <- factor(RCT.Clean$Med)
+Medication.Cochrane.Plot <- ggplot(RCT.Clean, aes(Med)) + geom_bar(aes(fill=Cochrane.Str), width=0.8) +
+  ggtitle("Number of RCT Effect Sizes Per Medication") + 
+  scale_x_discrete("Medication", limits = rev(levels(RCT.Clean$Med))) +
+  coord_flip() + 
+  SpTheme(legend.position = "right") + theme(legend.title = element_blank())
+Medication.Cochrane.Plot
+#ggsave(Medication.Cochrane.Plot, filename="Medication.Cochrane.Plot.png", width = 5, height = 9, dpi = 300)
 
