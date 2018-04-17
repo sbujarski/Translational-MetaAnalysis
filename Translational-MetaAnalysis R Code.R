@@ -1323,8 +1323,124 @@ NM.He.WYbwls <- WYbwls(x=NM.He.ES$NM.metaES, xsd=NM.He.ES$NM.metaES.se,
 #Modify plot with specific labels
 NM.He.WYbwls.plot <- NM.He.WYbwls$plot + 
   ggtitle("Laboratory Negative Mood and RCT Heavy Drinking\n- Conservative Approach -") +
-  scale_x_continuous("Laboratory Effects on Negative Mood (Hedge's G)")
+  scale_x_continuous("Laboratory Effects on Negative Mood (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)")
 NM.He.WYbwls.plot
 #ggsave(NM.He.WYbwls.plot, filename="NM.He.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
 
+
+#Lab Craving - Abstinence----
+Cr.Ab.ES <- na.exclude(Full.ES[,c("Med", "Cr.metaES", "Cr.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Cr.Ab.ES)
+#13 medications for this analysis
+
+Cr.Ab.WYbwls <- WYbwls(x=Cr.Ab.ES$Cr.metaES, xsd=Cr.Ab.ES$Cr.metaES.se,
+                       y=Cr.Ab.ES$Ab.metaES, ysd=Cr.Ab.ES$Ab.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+#  Coefficients: 
+#           Est  	   SE 
+# Int   	 0.049 	 0.052 
+# Slope 	 -0.2931 	 0.208 
+# 
+# r:   	 0.3239 
+# r^2: 	 0.1049 
+# p:   	 0.186989042274241 
+
+#Modify plot with specific labels
+Cr.Ab.WYbwls.plot <- Cr.Ab.WYbwls$plot + 
+  ggtitle("Laboratory Craving and RCT Abstinence\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") 
+Cr.Ab.WYbwls.plot
+#ggsave(Cr.Ab.WYbwls.plot, filename="Cr.Ab.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Stimulation - Abstinence----
+St.Ab.ES <- na.exclude(Full.ES[,c("Med", "St.metaES", "St.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(St.Ab.ES)
+#15 medications for this analysis
+
+St.Ab.WYbwls <- WYbwls(x=St.Ab.ES$St.metaES, xsd=St.Ab.ES$St.metaES.se,
+                       y=St.Ab.ES$Ab.metaES, ysd=St.Ab.ES$Ab.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+#  Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.093 	 0.039 
+# Slope 	 -0.2437 	 0.149 
+# 
+# r:   	 -0.1565 
+# r^2: 	 0.0245 
+# p:   	 0.12604055854209 
+
+#Modify plot with specific labels
+St.Ab.WYbwls.plot <- St.Ab.WYbwls$plot + 
+  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+St.Ab.WYbwls.plot
+#ggsave(St.Ab.WYbwls.plot, filename="St.Ab.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Sedation - Abstinence----
+Se.Ab.ES <- na.exclude(Full.ES[,c("Med", "Se.metaES", "Se.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Se.Ab.ES)
+#15 medications for this analysis
+
+Se.Ab.WYbwls <- WYbwls(x=Se.Ab.ES$Se.metaES, xsd=Se.Ab.ES$Se.metaES.se,
+                       y=Se.Ab.ES$Ab.metaES, ysd=Se.Ab.ES$Ab.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.075 	 0.046 
+# Slope 	 0.4586 	 0.267 
+# 
+# r:   	 0.4463 
+# r^2: 	 0.1992 
+# p:   	 0.109057436537707 
+
+#Modify plot with specific labels
+Se.Ab.WYbwls.plot <- Se.Ab.WYbwls$plot + 
+  ggtitle("Laboratory Sedation and RCT Abstinence\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+Se.Ab.WYbwls.plot
+#ggsave(Se.Ab.WYbwls.plot, filename="Se.Ab.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab NegMood - Abstinence----
+NM.Ab.ES <- na.exclude(Full.ES[,c("Med", "NM.metaES", "NM.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(NM.Ab.ES)
+#8 medications for this analysis
+
+NM.Ab.WYbwls <- WYbwls(x=NM.Ab.ES$NM.metaES, xsd=NM.Ab.ES$NM.metaES.se,
+                       y=NM.Ab.ES$Ab.metaES, ysd=NM.Ab.ES$Ab.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+#  Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+#  Coefficients: 
+# Est  	   SE 
+# Int   	 -0.108 	 0.245 
+# Slope 	 1.3301 	 1.483 
+# 
+# r:   	 0.5049 
+# r^2: 	 0.2549 
+# p:   	 0.404255122726759 
+
+#Modify plot with specific labels
+NM.Ab.WYbwls.plot <- NM.Ab.WYbwls$plot + 
+  ggtitle("Laboratory Negative Mood and RCT Abstinence\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Negative Mood (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+NM.Ab.WYbwls.plot
+#ggsave(NM.Ab.WYbwls.plot, filename="NM.Ab.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
 
