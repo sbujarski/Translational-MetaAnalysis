@@ -611,7 +611,7 @@ for (i in 1:dim(Lab.Sedation.ES)[1])
 rma.Sedation<- rma.recenterMed.Lab(Lab.Sedation.ES, abr="Se.")
 
 #Sedation - Forest Plot
-#Saving Size 8x7
+#Saving Size 8x8
 forest.rma(rma.Sedation$rma.uncent,
            slab = paste(Lab.Sedation.ES$Author, Lab.Sedation.ES$Year,sep=", "),
            ilab = cbind(as.character(Lab.Sedation.ES$Med), Lab.Sedation.ES$MaxDose, round(Lab.Sedation.ES$DpM, 1), round(Lab.Sedation.ES$MaxAlcDose, 3)),
@@ -633,8 +633,7 @@ Sedation.Funnel <- gg.funnel(es=Lab.Sedation.ES$es, es.var=Lab.Sedation.ES$var,
                                 title="Lab Outcomes - Alcohol Sedation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                                 lab=factor(Lab.Sedation.ES$Med), labsTitle="Medication")
 Sedation.Funnel
-
-ggsave(Sedation.Funnel, filename="Sedation.Funnel.png", width = 6, height = 5, dpi=400)
+#ggsave(Sedation.Funnel, filename="Sedation.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
 regtest(rma.Sedation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
@@ -643,8 +642,21 @@ regtest(rma.Sedation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = 0.0903, p = 0.9280
+# test for funnel plot asymmetry: z = 0.5219, p = 0.6018
 
+
+#Plot meta-analyzed effect sizes
+rma.Sedation$ES.est$Med <- factor(rma.Sedation$ES.est$Med)
+Sedation.ES.Plot <- ggplot(rma.Sedation$ES.est, aes(x=Se.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Se.metaES - Se.metaES.se, xmax = Se.metaES + Se.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Sedation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Sedation$ES.est$Med))) +
+  ggtitle("Sedation Effect Sizes") +
+  SpTheme()
+Sedation.ES.Plot
+#ggsave(Sedation.ES.Plot, filename="Sedation.ES.Plot.png", width = 6, height = 5, dpi = 400)
 
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.Sedation$ES.est, by="Med")
@@ -718,7 +730,7 @@ NegMood.Funnel <- gg.funnel(es=Lab.NegMood.ES$es, es.var=Lab.NegMood.ES$var,
                              lab=factor(Lab.NegMood.ES$Med), labsTitle="Medication")
 NegMood.Funnel+ annotate("rect", xmin = rma.NegMood$ES.mean+1.96*0.4, xmax = 1.3, ymin = 0, ymax = 0.4, alpha = .1, fill="black")
 
-ggsave(NegMood.Funnel, filename="NegMood.Funnel.png", width = 6, height = 5, dpi=400)
+#ggsave(NegMood.Funnel, filename="NegMood.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
 regtest(rma.NegMood$rma.uncent, model="rma", predictor="sei", ret.fit=F)
@@ -727,12 +739,27 @@ regtest(rma.NegMood$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = 0.4742, p = 0.6353
+# test for funnel plot asymmetry: z = 2.5325, p = 0.0113 ###ASYMMETRY TEST IS SIGNIFICANT###
+
+#Plot meta-analyzed effect sizes
+rma.NegMood$ES.est$Med <- factor(rma.NegMood$ES.est$Med)
+NegMood.ES.Plot <- ggplot(rma.NegMood$ES.est, aes(x=NM.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = NM.metaES - NM.metaES.se, xmax = NM.metaES + NM.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("NegMood Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.NegMood$ES.est$Med))) +
+  ggtitle("NegMood Effect Sizes") +
+  SpTheme()
+NegMood.ES.Plot
+#ggsave(NegMood.ES.Plot, filename="NegMood.ES.Plot.png", width = 6, height = 5, dpi = 400)
 
 
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.NegMood$ES.est, by="Med")
 
+#Remaking Full.ES$Med a factor
+Full.ES$Med <- factor(Full.ES$Med)
 
 
 
