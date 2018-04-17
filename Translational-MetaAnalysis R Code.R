@@ -350,12 +350,6 @@ table(Lab.noSA.main$Admin, Lab.noSA.main$Admin.C)
 Lab.Samples$Admin.C <- ifelse(Lab.Samples$Admin=="Challenge", 0, 1)
 table(Lab.Samples$Admin, Lab.Samples$Admin.C)
 
-#logDPM - center at - 100 drinks per month
-Lab.noSA.main$logDpM.C <- Lab.noSA.main$logDpM - log(100)
-SpDesc(Lab.noSA.main[c("logDpM", "logDpM.C")])
-Lab.Samples$logDpM.C <- Lab.Samples$logDpM - log(100)
-SpDesc(Lab.Samples[c("logDpM", "logDpM.C")])
-
 #MaxAlcDose - center at 0.06
 Lab.noSA.main$MaxAlcDose.C <- Lab.noSA.main$MaxAlcDose - 0.06
 SpDesc(Lab.noSA.main[c("MaxAlcDose", "MaxAlcDose.C")])
