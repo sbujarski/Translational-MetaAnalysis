@@ -1031,10 +1031,10 @@ RCT.Heavy$Sample <- factor(RCT.Heavy$Sample)
 #checks
 dim(RCT.Heavy) #406 effect sizes
 table(RCT.Heavy$Med)
-length(table(RCT.Heavy$Med)) #19 medications with NegMood outcomes
+length(table(RCT.Heavy$Med)) #19 medications with Heavy Drinking outcomes
 table(RCT.Heavy$Sample) #which samples gave data
 #Number of samples with NegMood data
-length(levels(RCT.Heavy$Sample)) # 132 samples with NegMood outcomes
+length(levels(RCT.Heavy$Sample)) # 132 samples with Heavy Drinking outcomes
 
 #Aggregate Heavy effect sizes
 RCT.Heavy.ES <- agg(data=RCT.Heavy, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
@@ -1112,3 +1112,219 @@ Heavy.ES.Plot
 
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.Heavy$ES.est, by="Med")
+
+
+#ABSTINENCE OUTCOME - Conservative Approach (No stat = 0)----
+
+#subset Abstinence outcomes
+RCT.Abstinence <- subset(RCT.Clean, OutDomain == "Abstinence")
+#reset levels of Med and Sample
+RCT.Abstinence$Med <- factor(RCT.Abstinence$Med)
+RCT.Abstinence$Sample <- factor(RCT.Abstinence$Sample)
+
+#checks
+dim(RCT.Abstinence) #258 effect sizes
+table(RCT.Abstinence$Med)
+length(table(RCT.Abstinence$Med)) #19 medications with Abstinence outcomes
+table(RCT.Abstinence$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Abstinence$Sample)) # 129 samples with Abstinence outcomes
+
+#Aggregate Abstinence effect sizes
+RCT.Abstinence.ES <- agg(data=RCT.Abstinence, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(RCT.Abstinence.ES)[names(RCT.Abstinence.ES)=="id"] <- "Sample"
+dim(RCT.Abstinence.ES)
+
+#merge aggregated effect sizes with 
+dim(RCT.Abstinence.ES)
+dim(Lab.Samples)
+RCT.Abstinence.ES <- inner_join(RCT.Abstinence.ES, RCT.Samples, by="Sample")
+dim(RCT.Abstinence.ES) #129 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Abstinence.ES$Med <- factor(RCT.Abstinence.ES$Med)
+RCT.Abstinence.ES$Sample <- factor(RCT.Abstinence.ES$Sample)
+
+#count number of Abstinence outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(RCT.Abstinence.ES)[1])
+{
+  RCT.Abstinence.ES$Outcomes[i] <- nrow(subset(RCT.Abstinence, Sample==RCT.Abstinence.ES$Sample[i]))
+}
+
+#Abstinence - RMA Analyses
+rma.Abstinence<- rma.recenterMed.RCT(RCT.Abstinence.ES, abr="Ab.")
+
+#Abstinence - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Abstinence$rma.uncent,
+           slab = paste(RCT.Abstinence.ES$Author, RCT.Abstinence.ES$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Abstinence.ES$Med), RCT.Abstinence.ES$MaxDose, round(RCT.Abstinence.ES$TrxDur, 1)),
+           ilab.xpos = c(-4, -2.5, 5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Abstinence.ES$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-7.5, 131, "Author(s) and Year", pos = 4, cex=0.6)
+text(-4, 131, "Medication", pos = 4, cex=0.6)
+text(-2.5, 131, "Dose", pos = 4, cex=0.6)
+text(5, 131, "Treatment Duration", pos = 4, cex=0.6)
+text(8, 131, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 133, "Abstinence", cex=.8)
+
+#funnel plot
+Abstinence.Funnel <- gg.funnel(es=RCT.Abstinence.ES$es, es.var=RCT.Abstinence.ES$var, 
+                          mean.effect=rma.Abstinence$ES.mean, se.effect=rma.Abstinence$ES.SEM,
+                          title="RCT Outcomes - Abstinence", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                          lab=factor(RCT.Abstinence.ES$Med), labsTitle="Medication")
+Abstinence.Funnel + annotate("rect", xmin = rma.Abstinence$ES.mean+1.96*0.6, xmax = 3.2, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+
+#ggsave(Abstinence.Funnel, filename="Abstinence.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Abstinence$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 2.0116, p = 0.0443
+
+#Plot meta-analyzed effect sizes
+rma.Abstinence$ES.est$Med <- factor(rma.Abstinence$ES.est$Med)
+Abstinence.ES.Plot <- ggplot(rma.Abstinence$ES.est, aes(x=Ab.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Ab.metaES - Ab.metaES.se, xmax = Ab.metaES + Ab.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Abstinence Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Abstinence$ES.est$Med))) +
+  ggtitle("Abstinence Effect Sizes") +
+  SpTheme()
+Abstinence.ES.Plot
+#ggsave(Abstinence.ES.Plot, filename="Abstinence.ES.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES <- full_join(Full.ES, rma.Abstinence$ES.est, by="Med")
+
+
+#WILLIAMSON-YORK TRANSLATIONAL ANALYSIS - Conservative Approach (No Stat = 0)----
+
+#Lab Craving - Heavy Drinking----
+Cr.He.ES <- na.exclude(Full.ES[,c("Med", "Cr.metaES", "Cr.metaES.se", "He.metaES", "He.metaES.se")])
+dim(Cr.He.ES)
+#13 medications for this analysis
+
+Cr.He.WYbwls <- WYbwls(x=Cr.He.ES$Cr.metaES, xsd=Cr.He.ES$Cr.metaES.se,
+                       y=Cr.He.ES$He.metaES, ysd=Cr.He.ES$He.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#             Est  	   SE 
+# Int   	 -0.798 	 0.918 
+# Slope 	 -3.6356 	 4.689 
+# 
+# r:   	 -0.1617 
+# r^2: 	 0.0262 
+# p:   	 0.454529412693122
+
+#Modify plot with specific labels
+Cr.He.WYbwls.plot <- Cr.He.WYbwls$plot + 
+  ggtitle("Laboratory Craving and RCT Heavy Drinking\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") +
+  theme(legend.position=c(0.2,0.2))
+Cr.He.WYbwls.plot
+#ggsave(Cr.He.WYbwls.plot, filename="Cr.He.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Stimulation - Heavy Drinking----
+St.He.ES <- na.exclude(Full.ES[,c("Med", "St.metaES", "St.metaES.se", "He.metaES", "He.metaES.se")])
+dim(St.He.ES)
+#15 medications for this analysis
+
+St.He.WYbwls <- WYbwls(x=St.He.ES$St.metaES, xsd=St.He.ES$St.metaES.se,
+                       y=St.He.ES$He.metaES, ysd=St.He.ES$He.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.303 	 0.255 
+# Slope 	 2.3831 	 2.51 
+# 
+# r:   	 0.128 
+# r^2: 	 0.0164 
+# p:   	 0.359618589952904 
+
+#Modify plot with specific labels
+St.He.WYbwls.plot <- St.He.WYbwls$plot + 
+  ggtitle("Laboratory Stimulation and RCT Heavy Drinking\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") +
+  theme(legend.position=c(.8,.6))
+St.He.WYbwls.plot
+#ggsave(St.He.WYbwls.plot, filename="St.He.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Sedation - Heavy Drinking----
+Se.He.ES <- na.exclude(Full.ES[,c("Med", "Se.metaES", "Se.metaES.se", "He.metaES", "He.metaES.se")])
+dim(Se.He.ES)
+#15 medications for this analysis
+
+Se.He.WYbwls <- WYbwls(x=Se.He.ES$Se.metaES, xsd=Se.He.ES$Se.metaES.se,
+                       y=Se.He.ES$He.metaES, ysd=Se.He.ES$He.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+#Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.081 	 0.234 
+# Slope 	 -4.0355 	 5.545 
+# 
+# r:   	 -0.3215 
+# r^2: 	 0.1033 
+# p:   	 0.479688870163164 
+
+#Modify plot with specific labels
+Se.He.WYbwls.plot <- Se.He.WYbwls$plot + 
+  ggtitle("Laboratory Sedation and RCT Heavy Drinking\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") +
+  theme(legend.position=c(0.2,0.2))
+Se.He.WYbwls.plot
+#ggsave(Se.He.WYbwls.plot, filename="Se.He.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab NegMood - Heavy Drinking----
+NM.He.ES <- na.exclude(Full.ES[,c("Med", "NM.metaES", "NM.metaES.se", "He.metaES", "He.metaES.se")])
+dim(NM.He.ES)
+#8 medications for this analysis
+
+NM.He.WYbwls <- WYbwls(x=NM.He.ES$NM.metaES, xsd=NM.He.ES$NM.metaES.se,
+                       y=NM.He.ES$He.metaES, ysd=NM.He.ES$He.metaES.se,
+                       print=T, plot=T, tol=1e-08)
+
+#  Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -45.348 	 10694.719 
+# Slope 	 362.1938 	 85627.106 
+# 
+# r:   	 -0.0779 
+# r^2: 	 0.0061 
+# p:   	 0.996762171256329 
+
+#Modify plot with specific labels
+NM.He.WYbwls.plot <- NM.He.WYbwls$plot + 
+  ggtitle("Laboratory Negative Mood and RCT Heavy Drinking\n- Conservative Approach -") +
+  scale_x_continuous("Laboratory Effects on Negative Mood (Hedge's G)")
+NM.He.WYbwls.plot
+#ggsave(NM.He.WYbwls.plot, filename="NM.He.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
