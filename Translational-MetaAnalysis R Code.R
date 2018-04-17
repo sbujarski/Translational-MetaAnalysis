@@ -142,6 +142,76 @@ rma.recenterMed.Lab <- function(data, abr=NULL)
   }
 }
 
+#rma.recenterMed.RCT
+#Function takes a pre-processed dataset with Med, es, var and covariate values for RCT data
+#runs random effects meta-analysis with med, MaxDose.C (log-base2 modal centered medication dose), 
+#                                       and TrxDur (treatment duration in weeks centered at 12)
+#prints meta analysis results with first med as reference group
+#prints overall average effect size and se from a separate meta-analysis without med predictor for use in gg.funnel plot
+#systematically recenters med factor and run rma to get estimate of es (intercept when centered) for each medication
+#prints metaES, se, pval, ci.lb, and ci.ub for each medication based on meta-regression model
+#returns uncentered rma result, recentered effect size estimates dataframe, overall mean, and overall SEM
+rma.recenterMed.RCT <- function(data, abr=NULL)
+{
+  nMeds <- length(levels(data$Med))
+  #print initial results 
+  contrasts(data$Med) <- contr.treatment(nMeds, base=1)
+  
+  #run first rma
+  cat("Random Effects Meta-Analysis result", "\n")
+  rma.uncent <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + TrxDur.C, #meta regression outcome
+                    data = data, method="REML")
+  print(rma.uncent)
+  
+  #Get results averaging accross meds for funnel plot
+  rma.noMed <- rma(yi=es, vi=var, mods = ~ MaxDose.C + TrxDur.C, data = data, method="REML")
+  cat(c("Overall Mean: ", as.double(rma.noMed$b["intrcpt",1])), "\n")
+  cat(c("Overall SEM:  ", as.double(rma.noMed$se[1])), "\n", "\n")
+  
+  #Set up data frame
+  ES.est <- data.frame(Med=levels(data$Med), metaES = rep(NA,nMeds), metaES.se = rep(NA,nMeds), metaES.pval = rep(NA,nMeds),
+                       metaES.ci.lb = rep(NA,nMeds), metaES.ci.ub = rep(NA,nMeds))
+  
+  
+  #Start contrasts
+  for(i in 1:nMeds)
+  {
+    contrasts(data$Med) <- contr.treatment(nMeds, base=i)
+    #print(contrasts(data$Med))
+    
+    #Run Meta-analysis
+    rma.result <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + TrxDur.C, #meta regression outcome
+                      data = data, method="REML")
+    #print(rma.result)
+    ES.est$metaES[i] <- rma.result$b["intrcpt",1]
+    ES.est$metaES.se[i] <- rma.result$se[1]
+    ES.est$metaES.pval[i] <- rma.result$pval[1]
+    ES.est$metaES.ci.lb[i] <- rma.result$ci.lb[1]
+    ES.est$metaES.ci.ub[i] <- rma.result$ci.ub[1]
+  }
+  
+  if(is.null(abr))
+  {
+    cat("Recentered Effect Size Estimates", "\n")
+    print(ES.est)
+    return(list(rma.uncent=rma.uncent, ES.est=ES.est, 
+                ES.mean=as.double(rma.noMed$b["intrcpt",1]), ES.SEM=as.double(rma.noMed$se[1])))
+  }
+  else
+  {
+    names(ES.est)[names(ES.est)=="metaES"] <- paste(abr,"metaES",sep="")
+    names(ES.est)[names(ES.est)=="metaES.se"] <- paste(abr,"metaES.se",sep="")
+    names(ES.est)[names(ES.est)=="metaES.pval"] <- paste(abr,"metaES.pval",sep="")
+    names(ES.est)[names(ES.est)=="metaES.ci.lb"] <- paste(abr,"metaES.ci.lb ",sep="")
+    names(ES.est)[names(ES.est)=="metaES.ci.ub"] <- paste(abr,"metaES.ci.ub",sep="")
+    
+    cat("Recentered Effect Size Estimates", "\n")
+    print(ES.est)
+    return(list(rma.uncent=rma.uncent, ES.est=ES.est, 
+                ES.mean=as.double(rma.noMed$b["intrcpt",1]), ES.SEM=as.double(rma.noMed$se[1])))
+  }
+}
+
 #getmode
 #Function to get the mode of a vector
 getmode <- function(v) {
@@ -764,7 +834,7 @@ RCT <- read_excel("C:/Users/sbuja/Documents/Manuscripts for Publication/Quant Re
 
 #How many medications?
 length(table(RCT$Med))
-#20 meds
+#19 meds
 #How many total effects
 sum(table(RCT$Med))
 #792
@@ -794,13 +864,13 @@ str(RCT.Samples)
 
 #Medication
 length(table(RCT.Samples$Med))
-#20 total medications
+#19 total medications
 
 table(RCT.Samples$Med)
-#  Acamprosate  Aripiprazole      Baclofen Carbamazepine    Divalproex    Gabapentin Levetiracetam     Memantine     Nalmefene    Naltrexone 
-#           29             1             7             1             1             6             5             1             7            43 
-#   Olanzapine   Ondansetron    Quetiapine    Rimonabant    Ritanserin    Sertraline    Topiramate     Valproate   Varenicline    Zonisamide 
-#            2             3             5             1             3             1             9             2             4             1 
+# Acamprosate  Aripiprazole      Baclofen Carbamazepine    Gabapentin Levetiracetam     Memantine     Nalmefene    Naltrexone    Olanzapine 
+#          28             1             7             1             6             3             1             7            44             2 
+# Ondansetron    Quetiapine    Rimonabant    Ritanserin    Sertraline    Topiramate     Valproate   Varenicline    Zonisamide 
+#           3             5             1             3             1            10             3             4             2 
 
 table(RCT.Samples$Cochrane)
 # 0  1 
@@ -855,7 +925,7 @@ table(RCT.Samples$NBins)
 #DpM
 SpDesc(RCT.Samples$DpM)
 #    nbr.val         min         max      median        mean     SE.mean         var     std.dev 
-# 147.000000   68.600000  771.400000  266.401500  260.255201    8.181048 9838.643817   99.189938 
+# 132.000000   68.600000  771.400000  266.401500  266.401511    8.599374 9761.298130   98.799282
 RCT.DpM.Hist <- SpHist(RCT.Samples$DpM, bins=15)
 RCT.DpM.Hist
 #ggsave(RCT.DpM.Hist, filename="RCT.DpM.Hist.png", width = 6, height = 5, dpi=300)
@@ -927,3 +997,118 @@ Medication.Cochrane.Plot <- ggplot(RCT.Clean, aes(Med)) + geom_bar(aes(fill=Coch
 Medication.Cochrane.Plot
 #ggsave(Medication.Cochrane.Plot, filename="Medication.Cochrane.Plot.png", width = 5, height = 9, dpi = 300)
 
+
+#META-ANALYSIS OF RCT OUTCOMES----
+
+#Center Covariates - MaxDose.C, TrxDur.C, Pharma
+
+#MaxDose - logbase2 center at modal dose of that medication (e.g. med with modal 50mg, 100 = 2, 25 = 0.5)
+RCT.Clean$MaxDose.C <- NA
+for(i in 1:dim(RCT.Clean)[1]){
+  RCT.Clean$MaxDose.C[i] <- log(RCT.Clean$MaxDose[i] / getmode(subset(RCT.Clean,Med==RCT.Clean$Med[i])$MaxDose), 2)
+}
+SpHist(RCT.Clean$MaxDose.C)
+RCT.Samples$MaxDose.C <- NA
+for(i in 1:dim(RCT.Samples)[1]){
+  RCT.Samples$MaxDose.C[i] <- log(RCT.Samples$MaxDose[i] / getmode(subset(RCT.Samples,Med==RCT.Samples$Med[i])$MaxDose), 2)
+}
+SpHist(RCT.Samples$MaxDose.C)
+
+#TrxDur - treatment duration in weeks - centered at 12wks
+RCT.Clean$TrxDur.C <- RCT.Clean$TrxDur - 12
+RCT.Samples$TrxDur.C <- RCT.Samples$TrxDur - 12
+
+
+
+#HEAVY DRINKING OUTCOME - Conservative Approach (No stat = 0)----
+
+#subset Heavy Drinking outcomes
+RCT.Heavy <- subset(RCT.Clean, OutDomain == "Heavy Drinking")
+#reset levels of Med and Sample
+RCT.Heavy$Med <- factor(RCT.Heavy$Med)
+RCT.Heavy$Sample <- factor(RCT.Heavy$Sample)
+
+#checks
+dim(RCT.Heavy) #406 effect sizes
+table(RCT.Heavy$Med)
+length(table(RCT.Heavy$Med)) #19 medications with NegMood outcomes
+table(RCT.Heavy$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Heavy$Sample)) # 132 samples with NegMood outcomes
+
+#Aggregate Heavy effect sizes
+RCT.Heavy.ES <- agg(data=RCT.Heavy, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(RCT.Heavy.ES)[names(RCT.Heavy.ES)=="id"] <- "Sample"
+dim(RCT.Heavy.ES)
+
+#merge aggregated effect sizes with 
+dim(RCT.Heavy.ES)
+dim(Lab.Samples)
+RCT.Heavy.ES <- inner_join(RCT.Heavy.ES, RCT.Samples, by="Sample")
+dim(RCT.Heavy.ES) #132 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Heavy.ES$Med <- factor(RCT.Heavy.ES$Med)
+RCT.Heavy.ES$Sample <- factor(RCT.Heavy.ES$Sample)
+
+#count number of Heavy outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(RCT.Heavy.ES)[1])
+{
+  RCT.Heavy.ES$Outcomes[i] <- nrow(subset(RCT.Heavy, Sample==RCT.Heavy.ES$Sample[i]))
+}
+
+#Heavy - RMA Analyses
+rma.Heavy<- rma.recenterMed.RCT(RCT.Heavy.ES, abr="He.")
+
+#Heavy - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Heavy$rma.uncent,
+           slab = paste(RCT.Heavy.ES$Author, RCT.Heavy.ES$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Heavy.ES$Med), RCT.Heavy.ES$MaxDose, round(RCT.Heavy.ES$TrxDur, 1)),
+           ilab.xpos = c(-4, -3, 2.5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Heavy.ES$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-5.5, 135, "Author(s) and Year", pos = 4, cex=0.6)
+text(-4, 135, "Medication", pos = 4, cex=0.6)
+text(-3, 135, "Dose", pos = 4, cex=0.6)
+text(2.5, 135, "Treatment Duration", pos = 4, cex=0.6)
+text(4, 135, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 137, "Heavy Drinking", cex=.8)
+
+#funnel plot
+Heavy.Funnel <- gg.funnel(es=RCT.Heavy.ES$es, es.var=RCT.Heavy.ES$var, 
+                            mean.effect=rma.Heavy$ES.mean, se.effect=rma.Heavy$ES.SEM,
+                            title="RCT Outcomes - Heavy Drinking", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(RCT.Heavy.ES$Med), labsTitle="Medication")
+Heavy.Funnel
+
+#ggsave(Heavy.Funnel, filename="Heavy.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Heavy$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -1.9100, p = 0.0561
+
+#Plot meta-analyzed effect sizes
+rma.Heavy$ES.est$Med <- factor(rma.Heavy$ES.est$Med)
+Heavy.ES.Plot <- ggplot(rma.Heavy$ES.est, aes(x=He.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = He.metaES - He.metaES.se, xmax = He.metaES + He.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Heavy Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Heavy$ES.est$Med))) +
+  ggtitle("Heavy Effect Sizes") +
+  SpTheme()
+Heavy.ES.Plot
+#ggsave(Heavy.ES.Plot, filename="Heavy.ES.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES <- full_join(Full.ES, rma.Heavy$ES.est, by="Med")
