@@ -453,9 +453,22 @@ regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # 
 # test for funnel plot asymmetry: z = -0.9612, p = 0.3364
 
+#Plot meta-analyzed effect sizes
+rma.Craving$ES.est$Med <- factor(rma.Craving$ES.est$Med)
+Craving.ES.Plot <- ggplot(rma.Craving$ES.est, aes(x=Cr.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Cr.metaES - Cr.metaES.se, xmax = Cr.metaES + Cr.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Craving Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving$ES.est$Med))) +
+  ggtitle("Craving Effect Sizes") +
+  SpTheme()
+Craving.ES.Plot
+#ggsave(Craving.ES.Plot, filename="Craving.ES.Plot.png", width = 6, height = 5, dpi = 400)
 
 #Save Medication Values
 Full.ES <- rma.Craving$ES.est
+
 
 
 
@@ -503,7 +516,7 @@ for (i in 1:dim(Lab.Stimulation.ES)[1])
 rma.Stimulation<- rma.recenterMed.Lab(Lab.Stimulation.ES, abr="St.")
 
 #Stimulation - Forest Plot
-#Saving Size 8x7
+#Saving Size 7x9
 forest.rma(rma.Stimulation$rma.uncent,
            slab = paste(Lab.Stimulation.ES$Author, Lab.Stimulation.ES$Year,sep=", "),
            ilab = cbind(as.character(Lab.Stimulation.ES$Med), Lab.Stimulation.ES$MaxDose, round(Lab.Stimulation.ES$DpM, 1), round(Lab.Stimulation.ES$MaxAlcDose, 3)),
@@ -525,10 +538,7 @@ Stimulation.Funnel <- gg.funnel(es=Lab.Stimulation.ES$es, es.var=Lab.Stimulation
                             title="Lab Outcomes - Alcohol Stimulation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                             lab=factor(Lab.Stimulation.ES$Med), labsTitle="Medication")
 Stimulation.Funnel + annotate("rect", xmin = rma.Stimulation$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
-
-
-
-ggsave(Stimulation.Funnel, filename="Stimulation.Funnel.png", width = 6, height = 5, dpi=400)
+#ggsave(Stimulation.Funnel, filename="Stimulation.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
 regtest(rma.Stimulation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
@@ -537,8 +547,20 @@ regtest(rma.Stimulation$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = -0.1636, p = 0.8701
+# test for funnel plot asymmetry: z = -0.8532, p = 0.3935
 
+#Plot meta-analyzed effect sizes
+rma.Stimulation$ES.est$Med <- factor(rma.Stimulation$ES.est$Med)
+Stimulation.ES.Plot <- ggplot(rma.Stimulation$ES.est, aes(x=St.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = St.metaES - St.metaES.se, xmax = St.metaES + St.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Stimulation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Stimulation$ES.est$Med))) +
+  ggtitle("Stimulation Effect Sizes") +
+  SpTheme()
+Stimulation.ES.Plot
+#ggsave(Stimulation.ES.Plot, filename="Stimulation.ES.Plot.png", width = 6, height = 5, dpi = 400)
 
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.Stimulation$ES.est, by="Med")
@@ -711,18 +733,7 @@ regtest(rma.NegMood$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.NegMood$ES.est, by="Med")
 
-#Plot meta-analyzed effect sizes
-Full.ES$Med <- factor(Full.ES$Med)
-rma.Craving$ES.est$Med <- factor(rma.Craving$Med)
-Craving.ES.Plot <- ggplot(rma.Craving$ES.est, aes(x=Cr.metaES, y=Med)) +
-  geom_vline(xintercept = 0, linetype='11') + 
-  geom_errorbarh(aes(xmin = Cr.metaES - Cr.metaES.se, xmax = Cr.metaES + Cr.metaES.se), height = 0.2) + 
-  geom_point(size=2) + 
-  scale_x_continuous("Craving Effect Size (Hedge's g)") + 
-  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving$ES.est$Med))) +
-  ggtitle("Craving Effect Sizes") +
-  SpTheme()
-Craving.ES.Plot
+
 
 
 
