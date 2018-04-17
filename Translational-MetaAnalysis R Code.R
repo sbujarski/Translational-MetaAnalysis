@@ -75,7 +75,8 @@ gg.funnel <- function(es, es.var, mean.effect, se.effect, title, x.lab, y.lab, l
 
 #rma.recenterMed.Lab
 #Function takes a pre-processed dataset with Med, es, var and covariate values for Laboratory data
-#runs random effects meta-analysis with med, MaxDose.C (log modal centered medication dose), MaxAlcDose.C (0.06 centered), and DPM.C (gand mean centered) covariates
+#runs random effects meta-analysis with med, MaxDose.C (log-base2 modal centered medication dose), MaxAlcDose.C (0.06 centered), 
+#                                       and Pop (population from light drinking, heavy drinking, or AUD; centered at AUD)
 #prints meta analysis results with first med as reference group
 #prints overall average effect size and se from a separate meta-analysis without med predictor for use in gg.funnel plot
 #systematically recenters med factor and run rma to get estimate of es (intercept when centered) for each medication
@@ -86,13 +87,14 @@ rma.recenterMed.Lab <- function(data, abr=NULL)
   nMeds <- length(levels(data$Med))
   #print initial results 
   contrasts(data$Med) <- contr.treatment(nMeds, base=1)
+  contrasts(data$Pop) <- contr.treatment(3, base=3)
   cat("Random Effects Meta-Analysis result", "\n")
-  rma.uncent <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + MaxAlcDose.C + logDpM.C, #meta regression outcome
+  rma.uncent <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + MaxAlcDose.C + Pop, #meta regression outcome
                     data = data, method="REML")
   print(rma.uncent)
   
   #Get results averaging accross meds for funnel plot
-  rma.noMed <- rma(yi=es, vi=var, mods = ~ MaxDose.C + MaxAlcDose.C + logDpM.C, data = data, method="REML")
+  rma.noMed <- rma(yi=es, vi=var, mods = ~ MaxDose.C + MaxAlcDose.C + Pop, data = data, method="REML")
   cat(c("Overall Mean: ", as.double(rma.noMed$b["intrcpt",1])), "\n")
   cat(c("Overall SEM:  ", as.double(rma.noMed$se[1])), "\n", "\n")
   
@@ -108,7 +110,7 @@ rma.recenterMed.Lab <- function(data, abr=NULL)
     #print(contrasts(data$Med))
     
     #Run Meta-analysis
-    rma.result <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + MaxAlcDose.C + logDpM.C, #meta regression outcome
+    rma.result <- rma(yi=es, vi=var, mods = ~ Med  + MaxDose.C + MaxAlcDose.C + Pop, #meta regression outcome
                       data = data, method="REML")
     #print(rma.result)
     ES.est$metaES[i] <- rma.result$b["intrcpt",1]
@@ -449,7 +451,7 @@ regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = -1.2902, p = 0.1970
+# test for funnel plot asymmetry: z = -0.9612, p = 0.3364
 
 
 #Save Medication Values
@@ -708,6 +710,19 @@ regtest(rma.NegMood$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 
 #Save Medication Values
 Full.ES <- full_join(Full.ES, rma.NegMood$ES.est, by="Med")
+
+#Plot meta-analyzed effect sizes
+Full.ES$Med <- factor(Full.ES$Med)
+rma.Craving$ES.est$Med <- factor(rma.Craving$Med)
+Craving.ES.Plot <- ggplot(rma.Craving$ES.est, aes(x=Cr.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Cr.metaES - Cr.metaES.se, xmax = Cr.metaES + Cr.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Craving Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving$ES.est$Med))) +
+  ggtitle("Craving Effect Sizes") +
+  SpTheme()
+Craving.ES.Plot
 
 
 
