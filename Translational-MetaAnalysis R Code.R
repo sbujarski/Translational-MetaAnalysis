@@ -600,7 +600,8 @@ Stimulation.Funnel <- gg.funnel(es=Lab.Stimulation.ES$es, es.var=Lab.Stimulation
                             mean.effect=rma.Stimulation$ES.mean, se.effect=rma.Stimulation$ES.SEM,
                             title="Lab Outcomes - Alcohol Stimulation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                             lab=factor(Lab.Stimulation.ES$Med), labsTitle="Medication")
-Stimulation.Funnel + annotate("rect", xmin = rma.Stimulation$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Stimulation.Funnel <- Stimulation.Funnel + annotate("rect", xmin = rma.Stimulation$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Stimulation.Funnel
 #ggsave(Stimulation.Funnel, filename="Stimulation.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
@@ -790,8 +791,8 @@ NegMood.Funnel <- gg.funnel(es=Lab.NegMood.ES$es, es.var=Lab.NegMood.ES$var,
                              mean.effect=rma.NegMood$ES.mean, se.effect=rma.NegMood$ES.SEM,
                              title="Lab Outcomes - Alcohol NegMood", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                              lab=factor(Lab.NegMood.ES$Med), labsTitle="Medication")
-NegMood.Funnel+ annotate("rect", xmin = rma.NegMood$ES.mean+1.96*0.4, xmax = 1.3, ymin = 0, ymax = 0.4, alpha = .1, fill="black")
-
+NegMood.Funnel <- NegMood.Funnel+ annotate("rect", xmin = rma.NegMood$ES.mean+1.96*0.4, xmax = 1.3, ymin = 0, ymax = 0.4, alpha = .1, fill="black")
+NegMood.Funnel
 #ggsave(NegMood.Funnel, filename="NegMood.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
@@ -1505,12 +1506,12 @@ text(2.6, 45, "Hedge's G [95% CI]", pos = 4, cex=.6)
 text(0, 47, "Alcohol Craving - Moderate Imputation")
 
 #funnel plot
-Craving.Funnel <- gg.funnel(es=Lab.Craving.ES.Imp$es, es.var=Lab.Craving.ES.Imp$var, 
+Craving.Funnel.Imp <- gg.funnel(es=Lab.Craving.ES.Imp$es, es.var=Lab.Craving.ES.Imp$var, 
                             mean.effect=rma.Craving.Imp$ES.mean, se.effect=rma.Craving.Imp$ES.SEM,
                             title="Lab Outcomes - Alcohol Craving\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                             lab=factor(Lab.Craving.ES.Imp$Med), labsTitle="Medication")
-Craving.Funnel
-#ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
+Craving.Funnel.Imp
+#ggsave(Craving.Funnel.Imp, filename="Craving.Funnel.Imp.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
 regtest(rma.Craving.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
@@ -1538,9 +1539,514 @@ Craving.ES.Imp.Plot
 Full.ES.Imp <- rma.Craving.Imp$ES.est
 
 
+#STIMULATION OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+Lab.Stimulation$ES.Imp <- NA
+Lab.Stimulation$ES.Impvar <- NA
+
+for(i in 1:dim(Lab.Stimulation)[1]){
+  if(Lab.Stimulation$NoStat[i]==1){
+    Lab.Stimulation$ES.Imp[i] <- -as.double(pes(p=0.5, n.1=Lab.Stimulation$N[i]/2, n.2=Lab.Stimulation$N[i]/2, dig=4, verbose=F)[c("g")])
+    Lab.Stimulation$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=Lab.Stimulation$N[i]/2, n.2=Lab.Stimulation$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    Lab.Stimulation$ES.Imp[i] <- Lab.Stimulation$ES[i]
+    Lab.Stimulation$ES.Impvar[i] <- Lab.Stimulation$ESvar[i]
+  }
+}
+
+#checks
+length(Lab.Stimulation$ES.Imp) #119 effect sizes
+length(table(Lab.Stimulation$Med)) #24 medications with craving outcomes
+table(Lab.Stimulation$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Stimulation$Sample)) # 50 samples with craving outcomes
+
+#Aggregate craving effect sizes
+Lab.Stimulation.ES.Imp <- agg(data=Lab.Stimulation, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(Lab.Stimulation.ES.Imp)[names(Lab.Stimulation.ES.Imp)=="id"] <- "Sample"
+dim(Lab.Stimulation.ES.Imp) #50 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.Stimulation.ES.Imp)
+dim(Lab.Samples)
+Lab.Stimulation.ES.Imp <- inner_join(Lab.Stimulation.ES.Imp, Lab.Samples, by="Sample")
+dim(Lab.Stimulation.ES.Imp) #50 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Stimulation.ES.Imp$Med <- factor(Lab.Stimulation.ES.Imp$Med)
+Lab.Stimulation.ES.Imp$Sample <- factor(Lab.Stimulation.ES.Imp$Sample)
+
+#count number of Stimulation outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(Lab.Stimulation.ES.Imp)[1])
+{
+  Lab.Stimulation.ES.Imp$Outcomes[i] <- nrow(subset(Lab.Stimulation, Sample==Lab.Stimulation.ES.Imp$Sample[i]))
+}
+
+
+#Stimulation - RMA Analyses
+rma.Stimulation.Imp<- rma.recenterMed.Lab(Lab.Stimulation.ES.Imp, abr="St.")
+
+#Stimulation - Forest Plot
+#Saving Size 7x9
+forest.rma(rma.Stimulation.Imp$rma.uncent,
+           slab = paste(Lab.Stimulation.ES.Imp$Author, Lab.Stimulation.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Stimulation.ES.Imp$Med), Lab.Stimulation.ES.Imp$MaxDose, round(Lab.Stimulation.ES.Imp$DpM, 1), round(Lab.Stimulation.ES.Imp$MaxAlcDose, 3)),
+           ilab.xpos = c(-4.5, -3, 3.8, 4.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Stimulation.ES.Imp$Med),
+           xlab="Hedge's G")
+text(-7.3, 53, "Author(s) and Year", pos = 4, cex=.6)
+text(-4.5, 53, "Medication", pos = 4, cex=.6)
+text(-3, 53, "Dose", pos = 4, cex=.6)
+text(3.8, 53, "DpM", pos = 4, cex=.6)
+text(4.7, 53, "BrAC", pos = 4, cex=.6)
+text(6, 53, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 54.5, "Alcohol Stimulation - Moderate Imputation")
+
+#funnel plot
+Stimulation.Funnel.Imp <- gg.funnel(es=Lab.Stimulation.ES.Imp$es, es.var=Lab.Stimulation.ES.Imp$var, 
+                            mean.effect=rma.Stimulation.Imp$ES.mean, se.effect=rma.Stimulation.Imp$ES.SEM,
+                            title="Lab Outcomes - Alcohol Stimulation\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(Lab.Stimulation.ES.Imp$Med), labsTitle="Medication")
+Stimulation.Funnel.Imp<- Stimulation.Funnel.Imp  + annotate("rect", xmin = rma.Stimulation.Imp$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Stimulation.Funnel.Imp
+#ggsave(Stimulation.Funnel.Imp, filename="Stimulation.Funnel.Imp.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Stimulation.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -0.8947, p = 0.3709
+
+#Plot meta-analyzed effect sizes
+rma.Stimulation.Imp$ES.est$Med <- factor(rma.Stimulation.Imp$ES.est$Med)
+Stimulation.ES.Imp.Plot <- ggplot(rma.Stimulation.Imp$ES.est, aes(x=St.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = St.metaES - St.metaES.se, xmax = St.metaES + St.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Stimulation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Stimulation.Imp$ES.est$Med))) +
+  ggtitle("Stimulation Effect Sizes\nModerate Imputation") +
+  SpTheme()
+Stimulation.ES.Imp.Plot
+#ggsave(Stimulation.ES.Imp.Plot, filename="Stimulation.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Imp <- full_join(Full.ES.Imp, rma.Stimulation.Imp$ES.est, by="Med")
+
+
+#SEDATION OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+Lab.Sedation$ES.Imp <- NA
+Lab.Sedation$ES.Impvar <- NA
+
+for(i in 1:dim(Lab.Sedation)[1]){
+  if(Lab.Sedation$NoStat[i]==1){
+    Lab.Sedation$ES.Imp[i] <- as.double(pes(p=0.5, n.1=Lab.Sedation$N[i]/2, n.2=Lab.Sedation$N[i]/2, dig=4, verbose=F)[c("g")])
+    Lab.Sedation$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=Lab.Sedation$N[i]/2, n.2=Lab.Sedation$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    Lab.Sedation$ES.Imp[i] <- Lab.Sedation$ES[i]
+    Lab.Sedation$ES.Impvar[i] <- Lab.Sedation$ESvar[i]
+  }
+}
+
+#checks
+length(Lab.Sedation$ES.Imp) #171 effect sizes
+length(table(Lab.Sedation$Med)) #23 medications with craving outcomes
+table(Lab.Sedation$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Sedation$Sample)) # 53 samples with craving outcomes
+
+#Aggregate craving effect sizes
+Lab.Sedation.ES.Imp <- agg(data=Lab.Sedation, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(Lab.Sedation.ES.Imp)[names(Lab.Sedation.ES.Imp)=="id"] <- "Sample"
+dim(Lab.Sedation.ES.Imp) #53 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.Sedation.ES.Imp)
+dim(Lab.Samples)
+Lab.Sedation.ES.Imp <- inner_join(Lab.Sedation.ES.Imp, Lab.Samples, by="Sample")
+dim(Lab.Sedation.ES.Imp) #53 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Sedation.ES.Imp$Med <- factor(Lab.Sedation.ES.Imp$Med)
+Lab.Sedation.ES.Imp$Sample <- factor(Lab.Sedation.ES.Imp$Sample)
+
+#count number of Sedation outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(Lab.Sedation.ES.Imp)[1])
+{
+  Lab.Sedation.ES.Imp$Outcomes[i] <- nrow(subset(Lab.Sedation, Sample==Lab.Sedation.ES.Imp$Sample[i]))
+}
+
+
+#Sedation - RMA Analyses
+rma.Sedation.Imp<- rma.recenterMed.Lab(Lab.Sedation.ES.Imp, abr="Se.")
+
+#Sedation - Forest Plot
+#Saving Size 8x8
+forest.rma(rma.Sedation.Imp$rma.uncent,
+           slab = paste(Lab.Sedation.ES.Imp$Author, Lab.Sedation.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Sedation.ES.Imp$Med), Lab.Sedation.ES.Imp$MaxDose, round(Lab.Sedation.ES.Imp$DpM, 1), round(Lab.Sedation.ES.Imp$MaxAlcDose, 3)),
+           ilab.xpos = c(-2.7, -1.7, 2, 2.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Sedation.ES.Imp$Med),
+           xlab="Hedge's G")
+text(-4.25, 56, "Author(s) and Year", pos = 4, cex=.6)
+text(-2.7, 56, "Medication", pos = 4, cex=.6)
+text(-1.7, 56, "Dose", pos = 4, cex=.6)
+text(2, 56, "DpM", pos = 4, cex=.6)
+text(2.7, 56, "BrAC", pos = 4, cex=.6)
+text(3.3, 56, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 57.5, "Alcohol Sedation - Moderate Imputation")
+
+#funnel plot
+Sedation.Funnel.Imp <- gg.funnel(es=Lab.Sedation.ES.Imp$es, es.var=Lab.Sedation.ES.Imp$var, 
+                            mean.effect=rma.Sedation.Imp$ES.mean, se.effect=rma.Sedation.Imp$ES.SEM,
+                            title="Lab Outcomes - Alcohol Sedation\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(Lab.Sedation.ES.Imp$Med), labsTitle="Medication")
+Sedation.Funnel.Imp
+#ggsave(Sedation.Funnel.Imp, filename="Sedation.Funnel.Imp.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Sedation.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 0.5789, p = 0.5626
+
+#Plot meta-analyzed effect sizes
+rma.Sedation.Imp$ES.est$Med <- factor(rma.Sedation.Imp$ES.est$Med)
+Sedation.ES.Imp.Plot <- ggplot(rma.Sedation.Imp$ES.est, aes(x=Se.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Se.metaES - Se.metaES.se, xmax = Se.metaES + Se.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Sedation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Sedation.Imp$ES.est$Med))) +
+  ggtitle("Sedation Effect Sizes\nModerate Imputation") +
+  SpTheme()
+Sedation.ES.Imp.Plot
+#ggsave(Sedation.ES.Imp.Plot, filename="Sedation.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Imp <- full_join(Full.ES.Imp, rma.Sedation.Imp$ES.est, by="Med")
 
 
 
+#NEGMOOD OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+Lab.NegMood$ES.Imp <- NA
+Lab.NegMood$ES.Impvar <- NA
+
+for(i in 1:dim(Lab.NegMood)[1]){
+  if(Lab.NegMood$NoStat[i]==1){
+    Lab.NegMood$ES.Imp[i] <- as.double(pes(p=0.5, n.1=Lab.NegMood$N[i]/2, n.2=Lab.NegMood$N[i]/2, dig=4, verbose=F)[c("g")])
+    Lab.NegMood$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=Lab.NegMood$N[i]/2, n.2=Lab.NegMood$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    Lab.NegMood$ES.Imp[i] <- Lab.NegMood$ES[i]
+    Lab.NegMood$ES.Impvar[i] <- Lab.NegMood$ESvar[i]
+  }
+}
+
+#checks
+length(Lab.NegMood$ES.Imp) #46 effect sizes
+length(table(Lab.NegMood$Med)) #12 medications with craving outcomes
+table(Lab.NegMood$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.NegMood$Sample)) # 21 samples with craving outcomes
+
+#Aggregate craving effect sizes
+Lab.NegMood.ES.Imp <- agg(data=Lab.NegMood, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(Lab.NegMood.ES.Imp)[names(Lab.NegMood.ES.Imp)=="id"] <- "Sample"
+dim(Lab.NegMood.ES.Imp) #21 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.NegMood.ES.Imp)
+dim(Lab.Samples)
+Lab.NegMood.ES.Imp <- inner_join(Lab.NegMood.ES.Imp, Lab.Samples, by="Sample")
+dim(Lab.NegMood.ES.Imp) #21 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.NegMood.ES.Imp$Med <- factor(Lab.NegMood.ES.Imp$Med)
+Lab.NegMood.ES.Imp$Sample <- factor(Lab.NegMood.ES.Imp$Sample)
+
+#count number of NegMood outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(Lab.NegMood.ES.Imp)[1])
+{
+  Lab.NegMood.ES.Imp$Outcomes[i] <- nrow(subset(Lab.NegMood, Sample==Lab.NegMood.ES.Imp$Sample[i]))
+}
 
 
+#NegMood - RMA Analyses
+rma.NegMood.Imp<- rma.recenterMed.Lab(Lab.NegMood.ES.Imp, abr="NM.")
+
+#NegMood - Forest Plot
+#Saving Size 10x10
+forest.rma(rma.NegMood.Imp$rma.uncent,
+           slab = paste(Lab.NegMood.ES.Imp$Author, Lab.NegMood.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(Lab.NegMood.ES.Imp$Med), Lab.NegMood.ES.Imp$MaxDose, round(Lab.NegMood.ES.Imp$DpM, 1), round(Lab.NegMood.ES.Imp$MaxAlcDose, 3)),
+           ilab.xpos = c(-2.2, -1.2, 2, 2.7),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.NegMood.ES.Imp$Med),
+           xlab="Hedge's G")
+text(-4, 23, "Author(s) and Year", pos = 4, cex=1)
+text(-2.2, 23, "Medication", pos = 4, cex=1)
+text(-1.2, 23, "Dose", pos = 4, cex=1)
+text(2, 23, "DpM", pos = 4, cex=1)
+text(2.7, 23, "BrAC", pos = 4, cex=1)
+text(3.3, 23, "Hedge's G [95% CI]", pos = 4, cex=1)
+text(0, 24.5, "Alcohol Negative Mood - Moderate Imputation", cex=1.1)
+
+#funnel plot
+NegMood.Funnel.Imp <- gg.funnel(es=Lab.NegMood.ES.Imp$es, es.var=Lab.NegMood.ES.Imp$var, 
+                             mean.effect=rma.NegMood.Imp$ES.mean, se.effect=rma.NegMood.Imp$ES.SEM,
+                             title="Lab Outcomes - Alcohol NegMood\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                             lab=factor(Lab.NegMood.ES.Imp$Med), labsTitle="Medication")
+NegMood.Funnel.Imp <- NegMood.Funnel.Imp + annotate("rect", xmin = rma.NegMood.Imp$ES.mean+1.96*0.5, xmax = 1.3, ymin = 0, ymax = 0.5, alpha = .1, fill="black")
+NegMood.Funnel.Imp
+#ggsave(NegMood.Funnel.Imp, filename="NegMood.Funnel.Imp.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.NegMood.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 1.0283, p = 0.3038
+
+#Plot meta-analyzed effect sizes
+rma.NegMood.Imp$ES.est$Med <- factor(rma.NegMood.Imp$ES.est$Med)
+NegMood.ES.Imp.Plot <- ggplot(rma.NegMood.Imp$ES.est, aes(x=NM.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = NM.metaES - NM.metaES.se, xmax = NM.metaES + NM.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("NegMood Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.NegMood.Imp$ES.est$Med))) +
+  ggtitle("NegMood Effect Sizes\nModerate Imputation") +
+  SpTheme()
+NegMood.ES.Imp.Plot
+#ggsave(NegMood.ES.Imp.Plot, filename="NegMood.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Imp <- full_join(Full.ES.Imp, rma.NegMood.Imp$ES.est, by="Med")
+
+
+#HEAVY DRINKING OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+RCT.Heavy$ES.Imp <- NA
+RCT.Heavy$ES.Impvar <- NA
+
+for(i in 1:dim(RCT.Heavy)[1]){
+  if(RCT.Heavy$NoStat[i]==1){
+    RCT.Heavy$ES.Imp[i] <- -as.double(pes(p=0.5, n.1=RCT.Heavy$N[i]/2, n.2=RCT.Heavy$N[i]/2, dig=4, verbose=F)[c("g")])
+    RCT.Heavy$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=RCT.Heavy$N[i]/2, n.2=RCT.Heavy$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    RCT.Heavy$ES.Imp[i] <- RCT.Heavy$ES[i]
+    RCT.Heavy$ES.Impvar[i] <- RCT.Heavy$ESvar[i]
+  }
+}
+
+#checks
+dim(RCT.Heavy) #406 effect sizes
+table(RCT.Heavy$Med)
+length(table(RCT.Heavy$Med)) #19 medications with Heavy Drinking outcomes
+table(RCT.Heavy$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Heavy$Sample)) # 132 samples with Heavy Drinking outcomes
+
+#Aggregate Heavy effect sizes
+RCT.Heavy.ES.Imp <- agg(data=RCT.Heavy, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(RCT.Heavy.ES.Imp)[names(RCT.Heavy.ES.Imp)=="id"] <- "Sample"
+dim(RCT.Heavy.ES.Imp) #132 effect sizes
+
+#merge aggregated effect sizes with 
+dim(RCT.Heavy.ES.Imp)
+dim(Lab.Samples)
+RCT.Heavy.ES.Imp <- inner_join(RCT.Heavy.ES.Imp, RCT.Samples, by="Sample")
+dim(RCT.Heavy.ES.Imp) #132 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Heavy.ES.Imp$Med <- factor(RCT.Heavy.ES.Imp$Med)
+RCT.Heavy.ES.Imp$Sample <- factor(RCT.Heavy.ES.Imp$Sample)
+
+#count number of Heavy outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(RCT.Heavy.ES.Imp)[1])
+{
+  RCT.Heavy.ES.Imp$Outcomes[i] <- nrow(subset(RCT.Heavy, Sample==RCT.Heavy.ES.Imp$Sample[i]))
+}
+
+#Heavy - RMA Analyses
+rma.Heavy.Imp<- rma.recenterMed.RCT(RCT.Heavy.ES.Imp, abr="He.")
+
+#Heavy - Forest Plot
+#Saving Size 10x15
+forest.rma(rma.Heavy.Imp$rma.uncent,
+           slab = paste(RCT.Heavy.ES.Imp$Author, RCT.Heavy.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Heavy.ES.Imp$Med), RCT.Heavy.ES.Imp$MaxDose, round(RCT.Heavy.ES.Imp$TrxDur, 1)),
+           ilab.xpos = c(-4, -3, 2.5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Heavy.ES.Imp$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-5.5, 135, "Author(s) and Year", pos = 4, cex=0.6)
+text(-4, 135, "Medication", pos = 4, cex=0.6)
+text(-3, 135, "Dose", pos = 4, cex=0.6)
+text(2.5, 135, "Treatment Duration", pos = 4, cex=0.6)
+text(4, 135, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 137, "Heavy Drinking - Moderate Imputation", cex=.8)
+
+#funnel plot
+Heavy.Funnel.Imp <- gg.funnel(es=RCT.Heavy.ES.Imp$es, es.var=RCT.Heavy.ES.Imp$var, 
+                          mean.effect=rma.Heavy.Imp$ES.mean, se.effect=rma.Heavy.Imp$ES.SEM,
+                          title="RCT Outcomes - Heavy Drinking\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                          lab=factor(RCT.Heavy.ES.Imp$Med), labsTitle="Medication")
+Heavy.Funnel.Imp
+#ggsave(Heavy.Funnel.Imp, filename="Heavy.Funnel.Imp.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Heavy.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -3.6156, p = 0.0003   #VERY SIGNIFICANT ASSYMETRY
+
+#Plot meta-analyzed effect sizes
+rma.Heavy.Imp$ES.Imp.est$Med <- factor(rma.Heavy.Imp$ES.est$Med)
+Heavy.ES.Imp.Plot <- ggplot(rma.Heavy.Imp$ES.est, aes(x=He.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = He.metaES - He.metaES.se, xmax = He.metaES + He.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Heavy Drinking Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Heavy.Imp$ES.est$Med))) +
+  ggtitle("Heavy Drinking Effect Sizes\nModerate Imputation") +
+  SpTheme()
+Heavy.ES.Imp.Plot
+#ggsave(Heavy.ES.Imp.Plot, filename="Heavy.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES.Imp <- full_join(Full.ES.Imp, rma.Heavy.Imp$ES.est, by="Med")
+
+
+
+#ABSTINENCE DRINKING OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+RCT.Abstinence$ES.Imp <- NA
+RCT.Abstinence$ES.Impvar <- NA
+
+for(i in 1:dim(RCT.Abstinence)[1]){
+  if(RCT.Abstinence$NoStat[i]==1){
+    RCT.Abstinence$ES.Imp[i] <- as.double(pes(p=0.5, n.1=RCT.Abstinence$N[i]/2, n.2=RCT.Abstinence$N[i]/2, dig=4, verbose=F)[c("g")])
+    RCT.Abstinence$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=RCT.Abstinence$N[i]/2, n.2=RCT.Abstinence$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    RCT.Abstinence$ES.Imp[i] <- RCT.Abstinence$ES[i]
+    RCT.Abstinence$ES.Impvar[i] <- RCT.Abstinence$ESvar[i]
+  }
+}
+
+#checks
+dim(RCT.Abstinence) #257 effect sizes
+table(RCT.Abstinence$Med)
+length(table(RCT.Abstinence$Med)) #19 medications with Abstinence Drinking outcomes
+table(RCT.Abstinence$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Abstinence$Sample)) # 129 samples with Abstinence Drinking outcomes
+
+#Aggregate Abstinence effect sizes
+RCT.Abstinence.ES.Imp <- agg(data=RCT.Abstinence, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(RCT.Abstinence.ES.Imp)[names(RCT.Abstinence.ES.Imp)=="id"] <- "Sample"
+dim(RCT.Abstinence.ES.Imp) #129 effect sizes
+
+#merge aggregated effect sizes with 
+dim(RCT.Abstinence.ES.Imp)
+dim(Lab.Samples)
+RCT.Abstinence.ES.Imp <- inner_join(RCT.Abstinence.ES.Imp, RCT.Samples, by="Sample")
+dim(RCT.Abstinence.ES.Imp) #129 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Abstinence.ES.Imp$Med <- factor(RCT.Abstinence.ES.Imp$Med)
+RCT.Abstinence.ES.Imp$Sample <- factor(RCT.Abstinence.ES.Imp$Sample)
+
+#count number of Abstinence outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(RCT.Abstinence.ES.Imp)[1])
+{
+  RCT.Abstinence.ES.Imp$Outcomes[i] <- nrow(subset(RCT.Abstinence, Sample==RCT.Abstinence.ES.Imp$Sample[i]))
+}
+
+#Abstinence - RMA Analyses
+rma.Abstinence.Imp<- rma.recenterMed.RCT(RCT.Abstinence.ES.Imp, abr="Ab.")
+
+#Abstinence - Forest Plot
+#Saving Size 10x15
+forest.rma(rma.Abstinence.Imp$rma.uncent,
+           slab = paste(RCT.Abstinence.ES.Imp$Author, RCT.Abstinence.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Abstinence.ES.Imp$Med), RCT.Abstinence.ES.Imp$MaxDose, round(RCT.Abstinence.ES.Imp$TrxDur, 1)),
+           ilab.xpos = c(-4, -2.5, 5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Abstinence.ES.Imp$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-7.5, 131, "Author(s) and Year", pos = 4, cex=0.6)
+text(-4, 131, "Medication", pos = 4, cex=0.6)
+text(-2.5, 131, "Dose", pos = 4, cex=0.6)
+text(5, 131, "Treatment Duration", pos = 4, cex=0.6)
+text(8, 131, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 133, "Abstinence - Moderate Imputation", cex=.8)
+
+#funnel plot
+Abstinence.Funnel.Imp <- gg.funnel(es=RCT.Abstinence.ES.Imp$es, es.var=RCT.Abstinence.ES.Imp$var, 
+                              mean.effect=rma.Abstinence.Imp$ES.mean, se.effect=rma.Abstinence.Imp$ES.SEM,
+                              title="RCT Outcomes - Abstinence\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                              lab=factor(RCT.Abstinence.ES.Imp$Med), labsTitle="Medication")
+Abstinence.Funnel.Imp <- Abstinence.Funnel.Imp + annotate("rect", xmin = rma.Abstinence.Imp$ES.mean+1.96*0.6, xmax = 3.2, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Abstinence.Funnel.Imp
+#ggsave(Abstinence.Funnel.Imp, filename="Abstinence.Funnel.Imp.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Abstinence.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = 2.6568, p = 0.0079   #SIGNIFICANT ASSYMETRY
+
+#Plot meta-analyzed effect sizes
+rma.Abstinence.Imp$ES.Imp.est$Med <- factor(rma.Abstinence.Imp$ES.est$Med)
+Abstinence.ES.Imp.Plot <- ggplot(rma.Abstinence.Imp$ES.est, aes(x=Ab.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Ab.metaES - Ab.metaES.se, xmax = Ab.metaES + Ab.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Abstinence Drinking Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Abstinence.Imp$ES.est$Med))) +
+  ggtitle("Abstinence Drinking Effect Sizes\nModerate Imputation") +
+  SpTheme()
+Abstinence.ES.Imp.Plot
+#ggsave(Abstinence.ES.Imp.Plot, filename="Abstinence.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES.Imp <- full_join(Full.ES.Imp, rma.Abstinence.Imp$ES.est, by="Med")
 
