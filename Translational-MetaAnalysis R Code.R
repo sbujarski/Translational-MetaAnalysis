@@ -11,7 +11,7 @@ library(dplyr) #Data Wrangling
 library(MAd) #agg function Implements Borenstein et al. (2009) approach for combining dependent ES and ES variances. Use Hedge's G
 library(metafor) #meta-regression pachage
 library(readxl) #package to import excel files directly
-
+library(compute.es)
 
 
 #CUSTOM FUNCTIONS------
@@ -439,7 +439,7 @@ for(i in 1:dim(Lab.Samples)[1]){
 SpHist(Lab.Samples$MaxDose.C)
 
 
-
+#CONSERVATIVE APROACH (No Stat = 0 effect size)----
 #CRAVING OUTCOME - Conservative Approach (no stat = 0)----
 
 #Subset Craving Outcomes
@@ -1443,4 +1443,115 @@ NM.Ab.WYbwls.plot <- NM.Ab.WYbwls$plot +
   scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
 NM.Ab.WYbwls.plot
 #ggsave(NM.Ab.WYbwls.plot, filename="NM.Ab.WYbwls.plot.png", width = 6, height = 5, dpi = 400)
+
+
+
+#MODERATE APROACH (No Stat = effect size associated with p-value of 0.5)----
+
+#CRAVING OUTCOME - Moderate Approach----
+
+#impute no stat effect sizes to p=0.5
+Lab.Craving$ES.Imp <- NA
+Lab.Craving$ES.Impvar <- NA
+
+for(i in 1:dim(Lab.Craving)[1]){
+  if(Lab.Craving$NoStat[i]==1){
+    Lab.Craving$ES.Imp[i] <- -as.double(pes(p=0.5, n.1=Lab.Craving$N[i]/2, n.2=Lab.Craving$N[i]/2, dig=4, verbose=F)[c("g")])
+    Lab.Craving$ES.Impvar[i] <- as.double(pes(p=0.5, n.1=Lab.Craving$N[i]/2, n.2=Lab.Craving$N[i]/2, dig=4, verbose=F)[c("var.g")])
+  }
+  else{
+    Lab.Craving$ES.Imp[i] <- Lab.Craving$ES[i]
+    Lab.Craving$ES.Impvar[i] <- Lab.Craving$ESvar[i]
+  }
+}
+
+#checks
+length(Lab.Craving$ES.Imp) #72 effect sizes
+length(table(Lab.Craving$Med)) #18 medications with craving outcomes
+table(Lab.Craving$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Craving$Sample)) # 43 samples with craving outcomes
+
+#Aggregate craving effect sizes
+Lab.Craving.ES.Imp <- agg(data=Lab.Craving, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
+names(Lab.Craving.ES.Imp)[names(Lab.Craving.ES.Imp)=="id"] <- "Sample"
+dim(Lab.Craving.ES.Imp)
+
+#merge aggregated effect sizes with 
+dim(Lab.Craving.ES.Imp)
+dim(Lab.Samples)
+Lab.Craving.ES.Imp <- inner_join(Lab.Craving.ES.Imp, Lab.Samples, by="Sample")
+dim(Lab.Craving.ES.Imp) #43 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Craving.ES.Imp$Med <- factor(Lab.Craving.ES.Imp$Med)
+Lab.Craving.ES.Imp$Sample <- factor(Lab.Craving.ES.Imp$Sample)
+
+#count number of Craving outcomes that were aggregated for each aggregated ES.Imp
+#count outcomes
+for (i in 1:dim(Lab.Craving.ES.Imp)[1])
+{
+  Lab.Craving.ES.Imp$Outcomes[i] <- nrow(subset(Lab.Craving, Sample==Lab.Craving.ES.Imp$Sample[i]))
+}
+
+
+#Craving - RMA Analyses
+rma.Craving<- rma.recenterMed.Lab(Lab.Craving.ES.Imp, abr="Cr.")
+
+#Craving - Forest Plot
+#Saving Size 8x7
+forest.rma(rma.Craving$rma.uncent,
+           slab = paste(Lab.Craving.ES.Imp$Author, Lab.Craving.ES.Imp$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Craving.ES.Imp$Med), Lab.Craving.ES.Imp$MaxDose, round(Lab.Craving.ES.Imp$DpM, 1), round(Lab.Craving.ES.Imp$MaxAlcDose, 3)),
+           ilab.xpos = c(-3.3, -2.4, 1.2, 1.8),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Craving.ES.Imp$Med),
+           xlab="Hedge's G")
+text(-4.9, 45, "Author(s) and Year", pos = 4, cex=.6)
+text(-3.3, 45, "Medication", pos = 4, cex=.6)
+text(-2.4, 45, "Dose", pos = 4, cex=.6)
+text(1.2, 45, "DpM", pos = 4, cex=.6)
+text(1.8, 45, "BrAC", pos = 4, cex=.6)
+text(2.6, 45, "Hedge's G [95% CI]", pos = 4, cex=.6)
+text(0, 47, "Alcohol Craving")
+
+#funnel plot
+Craving.Funnel <- gg.funnel(es=Lab.Craving.ES.Imp$es, es.var=Lab.Craving.ES.Imp$var, 
+                            mean.effect=rma.Craving$ES.Imp.mean, se.effect=rma.Craving$ES.Imp.SEM,
+                            title="Lab Outcomes - Alcohol Craving", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(Lab.Craving.ES.Imp$Med), labsTitle="Medication")
+Craving.Funnel
+#ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#Regression Test for Funnel Plot Asymmetry
+# 
+# model:     mixed-effects meta-regression model
+# predictor: standard error
+# 
+# test for funnel plot asymmetry: z = -0.9612, p = 0.3364
+
+#Plot meta-analyzed effect sizes
+rma.Craving$ES.Imp.est$Med <- factor(rma.Craving$ES.Imp.est$Med)
+Craving.ES.Imp.Plot <- ggplot(rma.Craving$ES.Imp.est, aes(x=Cr.metaES.Imp, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Cr.metaES.Imp - Cr.metaES.Imp.se, xmax = Cr.metaES.Imp + Cr.metaES.Imp.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Craving Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving$ES.Imp.est$Med))) +
+  ggtitle("Craving Effect Sizes") +
+  SpTheme()
+Craving.ES.Imp.Plot
+#ggsave(Craving.ES.Imp.Plot, filename="Craving.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Imp <- rma.Craving$ES.Imp.est
+
+
+
+
+
+
+
 
