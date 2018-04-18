@@ -2245,3 +2245,197 @@ NM.He.Ellipse.Imp.plot <- ggplot() +
   SpTheme()
 NM.He.Ellipse.Imp.plot
 #ggsave(NM.He.Ellipse.Imp.plot, filename="NM.He.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+
+
+#Lab Craving - Abstinence----
+Cr.Ab.ES.Imp <- na.exclude(Full.ES.Imp[,c("Med", "Cr.metaES", "Cr.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Cr.Ab.ES.Imp)
+#13 medications for this analysis
+
+Cr.Ab.WYbwls.Imp <- WYbwls(x=Cr.Ab.ES.Imp$Cr.metaES, xsd=Cr.Ab.ES.Imp$Cr.metaES.se,
+                           y=Cr.Ab.ES.Imp$Ab.metaES, ysd=Cr.Ab.ES.Imp$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+#  Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.527 	 0.385 
+# Slope 	 1.3018 	 1.206 
+# 
+# r:   	 0.2171 
+# r^2: 	 0.0471 
+# p:   	 0.303509879010203 
+
+#Modify plot with specific labels
+Cr.Ab.WYbwls.Imp.plot <- Cr.Ab.WYbwls.Imp$plot + 
+  ggtitle("Laboratory Craving and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+Cr.Ab.WYbwls.Imp.plot
+#ggsave(Cr.Ab.WYbwls.Imp.plot, filename="Cr.Ab.WYbwls.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Cr.Ab.ES.Imp$meanSD <- (Cr.Ab.ES.Imp$Cr.metaES.se + Cr.Ab.ES.Imp$Ab.metaES.se)/2
+Cr.Ab.ES.Imp$Wsize <- 1/(Cr.Ab.ES.Imp$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Cr.Ab.ES.Imp$Cr.metaES, xsd=Cr.Ab.ES.Imp$Cr.metaES.se, y=Cr.Ab.ES.Imp$Ab.metaES, ysd=Cr.Ab.ES.Imp$Ab.metaES.se)
+Cr.Ab.Ellipse.Imp.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Cr.Ab.ES.Imp, aes(x=Cr.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.25, y=-0.3, label=paste("italic(R)[WY]^2 == ",round(Cr.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.25, y=-0.35, label=paste("italic(p)[WY] == ",round(Cr.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Craving and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+Cr.Ab.Ellipse.Imp.plot
+#ggsave(Cr.Ab.Ellipse.Imp.plot, filename="Cr.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Stimulation - Abstinence----
+St.Ab.ES.Imp <- na.exclude(Full.ES.Imp[,c("Med", "St.metaES", "St.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(St.Ab.ES.Imp)
+#15 medications for this analysis
+
+St.Ab.WYbwls.Imp <- WYbwls(x=St.Ab.ES.Imp$St.metaES, xsd=St.Ab.ES.Imp$St.metaES.se,
+                           y=St.Ab.ES.Imp$Ab.metaES, ysd=St.Ab.ES.Imp$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.135 	 0.033 
+# Slope 	 -0.1316 	 0.123 
+# 
+# r:   	 -0.0499 
+# r^2: 	 0.0025 
+# p:   	 0.303096503815493 
+
+#Modify plot with specific labels
+St.Ab.WYbwls.Imp.plot <- St.Ab.WYbwls.Imp$plot + 
+  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+St.Ab.WYbwls.Imp.plot
+#ggsave(St.Ab.WYbwls.Imp.plot, filename="St.Ab.WYbwls.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+St.Ab.ES.Imp$meanSD <- (St.Ab.ES.Imp$St.metaES.se + St.Ab.ES.Imp$Ab.metaES.se)/2
+St.Ab.ES.Imp$Wsize <- 1/(St.Ab.ES.Imp$meanSD^2)
+Data.Ellipse <- CompEllipse(x=St.Ab.ES.Imp$St.metaES, xsd=St.Ab.ES.Imp$St.metaES.se, y=St.Ab.ES.Imp$Ab.metaES, ysd=St.Ab.ES.Imp$Ab.metaES.se)
+St.Ab.Ellipse.Imp.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=St.Ab.ES.Imp, aes(x=St.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=1, y=-0.2, label=paste("italic(R)[WY]^2 == ",round(St.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
+  annotate("text", x=1, y=-0.25, label=paste("italic(p)[WY] == ",round(St.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+St.Ab.Ellipse.Imp.plot
+#ggsave(St.Ab.Ellipse.Imp.plot, filename="St.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Sedation - Abstinence----
+Se.Ab.ES.Imp <- na.exclude(Full.ES.Imp[,c("Med", "Se.metaES", "Se.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Se.Ab.ES.Imp)
+#15 medications for this analysis
+
+Se.Ab.WYbwls.Imp <- WYbwls(x=Se.Ab.ES.Imp$Se.metaES, xsd=Se.Ab.ES.Imp$Se.metaES.se,
+                           y=Se.Ab.ES.Imp$Ab.metaES, ysd=Se.Ab.ES.Imp$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+#  Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.1 	 0.05 
+# Slope 	 0.3636 	 0.223 
+# 
+# r:   	 0.2632 
+# r^2: 	 0.0693 
+# p:   	 0.127747132637022 
+
+#Modify plot with specific labels
+Se.Ab.WYbwls.Imp.plot <- Se.Ab.WYbwls.Imp$plot + 
+  ggtitle("Laboratory Sedation and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+Se.Ab.WYbwls.Imp.plot
+#ggsave(Se.Ab.WYbwls.Imp.plot, filename="Se.Ab.WYbwls.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Se.Ab.ES.Imp$meanSD <- (Se.Ab.ES.Imp$Se.metaES.se + Se.Ab.ES.Imp$Ab.metaES.se)/2
+Se.Ab.ES.Imp$Wsize <- 1/(Se.Ab.ES.Imp$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Se.Ab.ES.Imp$Se.metaES, xsd=Se.Ab.ES.Imp$Se.metaES.se, y=Se.Ab.ES.Imp$Ab.metaES, ysd=Se.Ab.ES.Imp$Ab.metaES.se)
+Se.Ab.Ellipse.Imp.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Se.Ab.ES.Imp, aes(x=Se.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.7, y=-0.4, label=paste("italic(R)[WY]^2 == ",round(Se.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.7, y=-0.45, label=paste("italic(p)[WY] == ",round(Se.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Sedation and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+Se.Ab.Ellipse.Imp.plot
+#ggsave(Se.Ab.Ellipse.Imp.plot, filename="Se.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab NegMood - Abstinence----
+NM.Ab.ES.Imp <- na.exclude(Full.ES.Imp[,c("Med", "NM.metaES", "NM.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(NM.Ab.ES.Imp)
+#8 medications for this analysis
+
+NM.Ab.WYbwls.Imp <- WYbwls(x=NM.Ab.ES.Imp$NM.metaES, xsd=NM.Ab.ES.Imp$NM.metaES.se,
+                           y=NM.Ab.ES.Imp$Ab.metaES, ysd=NM.Ab.ES.Imp$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.346 	 1.442 
+# Slope 	 2.6122 	 7.549 
+# 
+# r:   	 0.5755 
+# r^2: 	 0.3312 
+# p:   	 0.741111496067219 
+
+#Modify plot with specific labels
+NM.Ab.WYbwls.Imp.plot <- NM.Ab.WYbwls.Imp$plot + 
+  ggtitle("Laboratory Negative Mood and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Negative Mood (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+NM.Ab.WYbwls.Imp.plot
+#ggsave(NM.Ab.WYbwls.Imp.plot, filename="NM.Ab.WYbwls.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+NM.Ab.ES.Imp$meanSD <- (NM.Ab.ES.Imp$NM.metaES.se + NM.Ab.ES.Imp$Ab.metaES.se)/2
+NM.Ab.ES.Imp$Wsize <- 1/(NM.Ab.ES.Imp$meanSD^2)
+Data.Ellipse <- CompEllipse(x=NM.Ab.ES.Imp$NM.metaES, xsd=NM.Ab.ES.Imp$NM.metaES.se, y=NM.Ab.ES.Imp$Ab.metaES, ysd=NM.Ab.ES.Imp$Ab.metaES.se)
+NM.Ab.Ellipse.Imp.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=NM.Ab.ES.Imp, aes(x=NM.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=-0.4, y=0.28, label=paste("italic(R)[WY]^2 == ",round(NM.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
+  annotate("text", x=-0.4, y=0.23, label=paste("italic(p)[WY] == ",round(NM.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Negative Mood and RCT Abstinence\n- Moderate Imputation -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Negative Mood (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+NM.Ab.Ellipse.Imp.plot
+#ggsave(NM.Ab.Ellipse.Imp.plot, filename="NM.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
