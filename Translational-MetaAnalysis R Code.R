@@ -552,7 +552,6 @@ table(Lab.Stimulation$Sample) #which samples gave data
 #Number of samples with Stimulation data
 length(levels(Lab.Stimulation$Sample)) # 50 samples with Stimulation outcomes
 
-
 #Aggregate Stimulation effect sizes
 Lab.Stimulation.ES <- agg(data=Lab.Stimulation, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
 names(Lab.Stimulation.ES)[names(Lab.Stimulation.ES)=="id"] <- "Sample"
@@ -646,7 +645,6 @@ length(table(Lab.Sedation$Med)) #23 medications with Sedation outcomes
 table(Lab.Sedation$Sample) #which samples gave data
 #Number of samples with Sedation data
 length(levels(Lab.Sedation$Sample)) # 53 samples with Sedation outcomes
-
 
 #Aggregate Sedation effect sizes
 Lab.Sedation.ES <- agg(data=Lab.Sedation, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
@@ -852,7 +850,7 @@ str(RCT)
 
 #delete rows from cochrane reviewed studies where the review did not include the outcome of interest
 RCT.Clean <- subset(RCT, !is.na(NoStat))
-dim(RCT.Clean) #664 effect sizes
+dim(RCT.Clean) #663 effect sizes
 
 #RCT STUDY STATS----
 #Select sample level data for summary tables
@@ -893,18 +891,15 @@ table(RCT.Samples$YearBins)
 # Pre 1990 1990-1994 1995-1999 2000-2004 2005-2009 2010-2014 Post 2014 
 #        1         5        19        33        33        30        11 
 
-
 #ActPlac
 table(RCT.Samples$ActPlac)
 #  0   1 
 #129   3 
 
-
 #Pharma
 table(RCT.Samples$Pharma)
 # 0  1 
 #58 59 
-
 
 #N
 table(RCT.Samples$N)
@@ -921,7 +916,6 @@ table(RCT.Samples$NBins)
 #  < 100 100-199 200-299 300-399 400-499 500-599    >600 
 #     55      37      21       5       5       3       6 
 
-
 #DpM
 SpDesc(RCT.Samples$DpM)
 #    nbr.val         min         max      median        mean     SE.mean         var     std.dev 
@@ -930,18 +924,15 @@ RCT.DpM.Hist <- SpHist(RCT.Samples$DpM, bins=15)
 RCT.DpM.Hist
 #ggsave(RCT.DpM.Hist, filename="RCT.DpM.Hist.png", width = 6, height = 5, dpi=300)
 
-
 #AbsReq
 table(RCT.Samples$AbsReq)
 # 0  1 
 #81 36
 
-
 #DepReq
 table(RCT.Samples$DepReq)
 #  0   1 
 #  8 123 
-
 
 #TrxDur
 SpDesc(RCT.Samples$TrxDur)
@@ -955,8 +946,6 @@ RCT.Samples <- RCT.Samples %>% mutate(TrxDurBins = cut(TrxDur, breaks=c(-Inf, 6,
 table(RCT.Samples$TrxDurBins)
 #   <7  7-10 11-14 15-18 19-22 23-26   >26 
 #    6     4    90     6     1    18     7
-
-
 
 #FUDur
 SpDesc(RCT.Samples$FUDur)
@@ -973,14 +962,14 @@ table(RCT.Samples$FUDurBins)
 
 #Effect size summaries
 
-#total number of effects: 664
+#total number of effects: 663
 length(RCT.Clean$ES)
 
 #Number of effects with no stat reported:
 table(RCT.Clean$NoStat)
 table(RCT.Clean$NoStat)/664
 #   0   1 
-# 337 327 
+# 336 327 
 # 51% 49% 
 
 #How many meds have each outcome?
@@ -1039,7 +1028,7 @@ length(levels(RCT.Heavy$Sample)) # 132 samples with Heavy Drinking outcomes
 #Aggregate Heavy effect sizes
 RCT.Heavy.ES <- agg(data=RCT.Heavy, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
 names(RCT.Heavy.ES)[names(RCT.Heavy.ES)=="id"] <- "Sample"
-dim(RCT.Heavy.ES)
+dim(RCT.Heavy.ES) #132 effect sizes
 
 #merge aggregated effect sizes with 
 dim(RCT.Heavy.ES)
@@ -1123,7 +1112,7 @@ RCT.Abstinence$Med <- factor(RCT.Abstinence$Med)
 RCT.Abstinence$Sample <- factor(RCT.Abstinence$Sample)
 
 #checks
-dim(RCT.Abstinence) #258 effect sizes
+dim(RCT.Abstinence) #257 effect sizes
 table(RCT.Abstinence$Med)
 length(table(RCT.Abstinence$Med)) #19 medications with Abstinence outcomes
 table(RCT.Abstinence$Sample) #which samples gave data
@@ -1188,7 +1177,7 @@ regtest(rma.Abstinence$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = 2.0116, p = 0.0443
+# test for funnel plot asymmetry: z = 2.0116, p = 0.0443 #Significant assymmetry on Abstinence outcomes. 
 
 #Plot meta-analyzed effect sizes
 rma.Abstinence$ES.est$Med <- factor(rma.Abstinence$ES.est$Med)
@@ -1475,7 +1464,7 @@ length(levels(Lab.Craving$Sample)) # 43 samples with craving outcomes
 #Aggregate craving effect sizes
 Lab.Craving.ES.Imp <- agg(data=Lab.Craving, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
 names(Lab.Craving.ES.Imp)[names(Lab.Craving.ES.Imp)=="id"] <- "Sample"
-dim(Lab.Craving.ES.Imp)
+dim(Lab.Craving.ES.Imp) #43 effect sizes
 
 #merge aggregated effect sizes with 
 dim(Lab.Craving.ES.Imp)
@@ -1496,11 +1485,11 @@ for (i in 1:dim(Lab.Craving.ES.Imp)[1])
 
 
 #Craving - RMA Analyses
-rma.Craving<- rma.recenterMed.Lab(Lab.Craving.ES.Imp, abr="Cr.")
+rma.Craving.Imp<- rma.recenterMed.Lab(Lab.Craving.ES.Imp, abr="Cr.")
 
 #Craving - Forest Plot
 #Saving Size 8x7
-forest.rma(rma.Craving$rma.uncent,
+forest.rma(rma.Craving.Imp$rma.uncent,
            slab = paste(Lab.Craving.ES.Imp$Author, Lab.Craving.ES.Imp$Year,sep=", "),
            ilab = cbind(as.character(Lab.Craving.ES.Imp$Med), Lab.Craving.ES.Imp$MaxDose, round(Lab.Craving.ES.Imp$DpM, 1), round(Lab.Craving.ES.Imp$MaxAlcDose, 3)),
            ilab.xpos = c(-3.3, -2.4, 1.2, 1.8),
@@ -1513,40 +1502,40 @@ text(-2.4, 45, "Dose", pos = 4, cex=.6)
 text(1.2, 45, "DpM", pos = 4, cex=.6)
 text(1.8, 45, "BrAC", pos = 4, cex=.6)
 text(2.6, 45, "Hedge's G [95% CI]", pos = 4, cex=.6)
-text(0, 47, "Alcohol Craving")
+text(0, 47, "Alcohol Craving - Moderate Imputation")
 
 #funnel plot
 Craving.Funnel <- gg.funnel(es=Lab.Craving.ES.Imp$es, es.var=Lab.Craving.ES.Imp$var, 
-                            mean.effect=rma.Craving$ES.Imp.mean, se.effect=rma.Craving$ES.Imp.SEM,
-                            title="Lab Outcomes - Alcohol Craving", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            mean.effect=rma.Craving.Imp$ES.mean, se.effect=rma.Craving.Imp$ES.SEM,
+                            title="Lab Outcomes - Alcohol Craving\nModerate Imputation", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
                             lab=factor(Lab.Craving.ES.Imp$Med), labsTitle="Medication")
 Craving.Funnel
 #ggsave(Craving.Funnel, filename="Craving.Funnel.png", width = 6, height = 5, dpi=400)
 
 #test of funnel plot asymmetry
-regtest(rma.Craving$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+regtest(rma.Craving.Imp$rma.uncent, model="rma", predictor="sei", ret.fit=F)
 #Regression Test for Funnel Plot Asymmetry
 # 
 # model:     mixed-effects meta-regression model
 # predictor: standard error
 # 
-# test for funnel plot asymmetry: z = -0.9612, p = 0.3364
+# test for funnel plot asymmetry: z = -0.3364, p = 0.7365
 
 #Plot meta-analyzed effect sizes
-rma.Craving$ES.Imp.est$Med <- factor(rma.Craving$ES.Imp.est$Med)
-Craving.ES.Imp.Plot <- ggplot(rma.Craving$ES.Imp.est, aes(x=Cr.metaES.Imp, y=Med)) +
+rma.Craving.Imp$ES.est$Med <- factor(rma.Craving.Imp$ES.est$Med)
+Craving.ES.Imp.Plot <- ggplot(rma.Craving.Imp$ES.est, aes(x=Cr.metaES, y=Med)) +
   geom_vline(xintercept = 0, linetype='11') + 
-  geom_errorbarh(aes(xmin = Cr.metaES.Imp - Cr.metaES.Imp.se, xmax = Cr.metaES.Imp + Cr.metaES.Imp.se), height = 0.2) + 
+  geom_errorbarh(aes(xmin = Cr.metaES - Cr.metaES.se, xmax = Cr.metaES + Cr.metaES.se), height = 0.2) + 
   geom_point(size=2) + 
   scale_x_continuous("Craving Effect Size (Hedge's g)") + 
-  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving$ES.Imp.est$Med))) +
-  ggtitle("Craving Effect Sizes") +
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving.Imp$ES.est$Med))) +
+  ggtitle("Craving Effect Sizes\nModerate Imputation") +
   SpTheme()
 Craving.ES.Imp.Plot
 #ggsave(Craving.ES.Imp.Plot, filename="Craving.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
 
 #Save Medication Values
-Full.ES.Imp <- rma.Craving$ES.Imp.est
+Full.ES.Imp <- rma.Craving.Imp$ES.est
 
 
 
