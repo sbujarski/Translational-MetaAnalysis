@@ -2439,3 +2439,356 @@ NM.Ab.Ellipse.Imp.plot <- ggplot() +
   SpTheme()
 NM.Ab.Ellipse.Imp.plot
 #ggsave(NM.Ab.Ellipse.Imp.plot, filename="NM.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#LIBERAL APROACH (No Stat = dropped)----
+
+#CRAVING OUTCOME - Liberal Approach----
+
+#drop no stat effect sizes
+Lab.Craving.Drop <- subset(Lab.Craving, NoStat==0)
+
+#reset levels of Med and Sample
+Lab.Craving.Drop$Med <- factor(Lab.Craving.Drop$Med)
+Lab.Craving.Drop$Sample <- factor(Lab.Craving.Drop$Sample)
+
+#checks
+length(Lab.Craving.Drop$ES) #49 effect sizes
+length(table(Lab.Craving.Drop$Med)) #14 medications with craving outcomes
+table(Lab.Craving.Drop$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Craving.Drop$Sample)) # 32 samples with craving outcomes
+
+#Aggregate craving effect sizes
+Lab.Craving.Drop.ES <- agg(data=Lab.Craving.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Craving.Drop.ES)[names(Lab.Craving.Drop.ES)=="id"] <- "Sample"
+dim(Lab.Craving.Drop.ES) #32 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.Craving.Drop.ES)
+dim(Lab.Samples)
+Lab.Craving.Drop.ES <- inner_join(Lab.Craving.Drop.ES, Lab.Samples, by="Sample")
+dim(Lab.Craving.Drop.ES) #32 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Craving.Drop.ES$Med <- factor(Lab.Craving.Drop.ES$Med)
+Lab.Craving.Drop.ES$Sample <- factor(Lab.Craving.Drop.ES$Sample)
+
+#count number of Craving outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Craving.Drop.ES)[1])
+{
+  Lab.Craving.Drop.ES$Outcomes[i] <- nrow(subset(Lab.Craving.Drop, Sample==Lab.Craving.Drop.ES$Sample[i]))
+}
+
+#Craving - RMA Analyses
+rma.Craving.Drop<- rma.recenterMed.Lab(Lab.Craving.Drop.ES, abr="Cr.")
+
+#Craving - Forest Plot
+#Saving Size 10x10
+forest.rma(rma.Craving.Drop$rma.uncent,
+           slab = paste(Lab.Craving.Drop.ES$Author, Lab.Craving.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Craving.Drop.ES$Med), Lab.Craving.Drop.ES$MaxDose, round(Lab.Craving.Drop.ES$DpM, 1), round(Lab.Craving.Drop.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-3.3, -2.2, 1.2, 1.8),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Craving.Drop.ES$Med),
+           xlab="Hedge's G")
+text(-5.3, 34, "Author(s) and Year", pos = 4, cex=1)
+text(-3.3, 34, "Medication", pos = 4, cex=1)
+text(-2.2, 34, "Dose", pos = 4, cex=1)
+text(1.2, 34, "DpM", pos = 4, cex=1)
+text(1.8, 34, "BrAC", pos = 4, cex=1)
+text(2.6, 34, "Hedge's G [95% CI]", pos = 4, cex=1)
+text(0, 36, "Alcohol Craving - Liberal Dropping", cex=1.2)
+
+#funnel plot
+Craving.Funnel.Drop <- gg.funnel(es=Lab.Craving.Drop.ES$es, es.var=Lab.Craving.Drop.ES$var, 
+                            mean.effect=rma.Craving.Drop$ES.mean, se.effect=rma.Craving.Drop$ES.SEM,
+                            title="Lab Outcomes - Alcohol Craving\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                            lab=factor(Lab.Craving.Drop.ES$Med), labsTitle="Medication")
+Craving.Funnel.Drop
+#ggsave(Craving.Funnel.Drop, filename="Craving.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Craving.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = -0.7210, p = 0.4709
+
+#Plot meta-analyzed effect sizes
+rma.Craving.Drop$ES.est$Med <- factor(rma.Craving.Drop$ES.est$Med)
+Craving.ES.Drop.Plot <- ggplot(rma.Craving.Drop$ES.est, aes(x=Cr.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Cr.metaES - Cr.metaES.se, xmax = Cr.metaES + Cr.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Craving Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Craving.Drop$ES.est$Med))) +
+  ggtitle("Craving Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+Craving.ES.Drop.Plot
+#ggsave(Craving.ES.Drop.Plot, filename="Craving.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Drop <- rma.Craving.Drop$ES.est
+
+
+#STIMULATION OUTCOME - Liberal Approach----
+
+#drop no stat effect sizes
+Lab.Stimulation.Drop <- subset(Lab.Stimulation, NoStat==0)
+
+#reset levels of Med and Sample
+Lab.Stimulation.Drop$Med <- factor(Lab.Stimulation.Drop$Med)
+Lab.Stimulation.Drop$Sample <- factor(Lab.Stimulation.Drop$Sample)
+
+#checks
+length(Lab.Stimulation.Drop$ES) #75 effect sizes
+length(table(Lab.Stimulation.Drop$Med)) #17 medications with Stimulation outcomes
+table(Lab.Stimulation.Drop$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Stimulation.Drop$Sample)) # 38 samples with Stimulation outcomes
+
+#Aggregate craving effect sizes
+Lab.Stimulation.Drop.ES <- agg(data=Lab.Stimulation.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Stimulation.Drop.ES)[names(Lab.Stimulation.Drop.ES)=="id"] <- "Sample"
+dim(Lab.Stimulation.Drop.ES) #38 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.Stimulation.Drop.ES)
+dim(Lab.Samples)
+Lab.Stimulation.Drop.ES <- inner_join(Lab.Stimulation.Drop.ES, Lab.Samples, by="Sample")
+dim(Lab.Stimulation.Drop.ES) #38 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Stimulation.Drop.ES$Med <- factor(Lab.Stimulation.Drop.ES$Med)
+Lab.Stimulation.Drop.ES$Sample <- factor(Lab.Stimulation.Drop.ES$Sample)
+
+#count number of Stimulation outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Stimulation.Drop.ES)[1])
+{
+  Lab.Stimulation.Drop.ES$Outcomes[i] <- nrow(subset(Lab.Stimulation.Drop, Sample==Lab.Stimulation.Drop.ES$Sample[i]))
+}
+
+#Stimulation - RMA Analyses
+rma.Stimulation.Drop<- rma.recenterMed.Lab(Lab.Stimulation.Drop.ES, abr="St.")
+
+#Stimulation - Forest Plot
+#Saving Size 10x10
+forest.rma(rma.Stimulation.Drop$rma.uncent,
+           slab = paste(Lab.Stimulation.Drop.ES$Author, Lab.Stimulation.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Stimulation.Drop.ES$Med), Lab.Stimulation.Drop.ES$MaxDose, round(Lab.Stimulation.Drop.ES$DpM, 1), round(Lab.Stimulation.Drop.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-4, -2.5, 3.5, 4.5),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Stimulation.Drop.ES$Med),
+           xlab="Hedge's G")
+text(-7, 40, "Author(s) and Year", pos = 4, cex=1)
+text(-4, 40, "Medication", pos = 4, cex=1)
+text(-2.5, 40, "Dose", pos = 4, cex=1)
+text(3.5, 40, "DpM", pos = 4, cex=1)
+text(4.5, 40, "BrAC", pos = 4, cex=1)
+text(6, 40, "Hedge's G [95% CI]", pos = 4, cex=1)
+text(0, 42, "Alcohol Stimulation - Liberal Dropping", cex=1.2)
+
+#funnel plot
+Stimulation.Funnel.Drop <- gg.funnel(es=Lab.Stimulation.Drop.ES$es, es.var=Lab.Stimulation.Drop.ES$var, 
+                                 mean.effect=rma.Stimulation.Drop$ES.mean, se.effect=rma.Stimulation.Drop$ES.SEM,
+                                 title="Lab Outcomes - Alcohol Stimulation\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                                 lab=factor(Lab.Stimulation.Drop.ES$Med), labsTitle="Medication")
+Stimulation.Funnel.Drop <- Stimulation.Funnel.Drop  + annotate("rect", xmin = rma.Stimulation.Drop$ES.mean+1.96*0.6, xmax = 1.9, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Stimulation.Funnel.Drop
+#ggsave(Stimulation.Funnel.Drop, filename="Stimulation.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Stimulation.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = -1.1149, p = 0.2649
+
+#Plot meta-analyzed effect sizes
+rma.Stimulation.Drop$ES.est$Med <- factor(rma.Stimulation.Drop$ES.est$Med)
+Stimulation.ES.Drop.Plot <- ggplot(rma.Stimulation.Drop$ES.est, aes(x=St.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = St.metaES - St.metaES.se, xmax = St.metaES + St.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Stimulation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Stimulation.Drop$ES.est$Med))) +
+  ggtitle("Stimulation Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+Stimulation.ES.Drop.Plot
+#ggsave(Stimulation.ES.Drop.Plot, filename="Stimulation.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Drop <- full_join(Full.ES.Drop, rma.Stimulation.Drop$ES.est, by="Med")
+
+
+#SEDATION OUTCOME - Liberal Approach----
+
+#drop no stat effect sizes
+Lab.Sedation.Drop <- subset(Lab.Sedation, NoStat==0)
+
+#reset levels of Med and Sample
+Lab.Sedation.Drop$Med <- factor(Lab.Sedation.Drop$Med)
+Lab.Sedation.Drop$Sample <- factor(Lab.Sedation.Drop$Sample)
+
+#checks
+length(Lab.Sedation.Drop$ES) #95 effect sizes
+length(table(Lab.Sedation.Drop$Med)) #18 medications with Sedation outcomes
+table(Lab.Sedation.Drop$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.Sedation.Drop$Sample)) # 42 samples with Sedation outcomes
+
+#Aggregate craving effect sizes
+Lab.Sedation.Drop.ES <- agg(data=Lab.Sedation.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.Sedation.Drop.ES)[names(Lab.Sedation.Drop.ES)=="id"] <- "Sample"
+dim(Lab.Sedation.Drop.ES) #42 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.Sedation.Drop.ES)
+dim(Lab.Samples)
+Lab.Sedation.Drop.ES <- inner_join(Lab.Sedation.Drop.ES, Lab.Samples, by="Sample")
+dim(Lab.Sedation.Drop.ES) #42 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.Sedation.Drop.ES$Med <- factor(Lab.Sedation.Drop.ES$Med)
+Lab.Sedation.Drop.ES$Sample <- factor(Lab.Sedation.Drop.ES$Sample)
+
+#count number of Sedation outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.Sedation.Drop.ES)[1])
+{
+  Lab.Sedation.Drop.ES$Outcomes[i] <- nrow(subset(Lab.Sedation.Drop, Sample==Lab.Sedation.Drop.ES$Sample[i]))
+}
+
+#Sedation - RMA Analyses
+rma.Sedation.Drop<- rma.recenterMed.Lab(Lab.Sedation.Drop.ES, abr="Se.")
+
+#Sedation - Forest Plot
+#Saving Size 10x10
+forest.rma(rma.Sedation.Drop$rma.uncent,
+           slab = paste(Lab.Sedation.Drop.ES$Author, Lab.Sedation.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.Sedation.Drop.ES$Med), Lab.Sedation.Drop.ES$MaxDose, round(Lab.Sedation.Drop.ES$DpM, 1), round(Lab.Sedation.Drop.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-3.3, -2.2, 2.5, 3.1),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.Sedation.Drop.ES$Med),
+           xlab="Hedge's G")
+text(-5.7, 44, "Author(s) and Year", pos = 4, cex=.8)
+text(-3.3, 44, "Medication", pos = 4, cex=.8)
+text(-2.2, 44, "Dose", pos = 4, cex=.8)
+text(2.5, 44, "DpM", pos = 4, cex=.8)
+text(3.1, 44, "BrAC", pos = 4, cex=.8)
+text(3.9, 44, "Hedge's G [95% CI]", pos = 4, cex=.8)
+text(0, 46, "Alcohol Sedation - Liberal Dropping", cex=1)
+
+#funnel plot
+Sedation.Funnel.Drop <- gg.funnel(es=Lab.Sedation.Drop.ES$es, es.var=Lab.Sedation.Drop.ES$var, 
+                                 mean.effect=rma.Sedation.Drop$ES.mean, se.effect=rma.Sedation.Drop$ES.SEM,
+                                 title="Lab Outcomes - Alcohol Sedation\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                                 lab=factor(Lab.Sedation.Drop.ES$Med), labsTitle="Medication")
+Sedation.Funnel.Drop
+#ggsave(Sedation.Funnel.Drop, filename="Sedation.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Sedation.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = -0.4852, p = 0.6275
+
+#Plot meta-analyzed effect sizes
+rma.Sedation.Drop$ES.est$Med <- factor(rma.Sedation.Drop$ES.est$Med)
+Sedation.ES.Drop.Plot <- ggplot(rma.Sedation.Drop$ES.est, aes(x=Se.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Se.metaES - Se.metaES.se, xmax = Se.metaES + Se.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Sedation Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Sedation.Drop$ES.est$Med))) +
+  ggtitle("Sedation Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+Sedation.ES.Drop.Plot
+#ggsave(Sedation.ES.Drop.Plot, filename="Sedation.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Drop <- full_join(Full.ES.Drop, rma.Sedation.Drop$ES.est, by="Med")
+
+
+#NEGMOOD OUTCOME - Liberal Approach----
+
+#drop no stat effect sizes
+Lab.NegMood.Drop <- subset(Lab.NegMood, NoStat==0)
+
+#reset levels of Med and Sample
+Lab.NegMood.Drop$Med <- factor(Lab.NegMood.Drop$Med)
+Lab.NegMood.Drop$Sample <- factor(Lab.NegMood.Drop$Sample)
+
+#checks
+length(Lab.NegMood.Drop$ES) #21 effect sizes
+length(table(Lab.NegMood.Drop$Med)) #6 medications with NegMood outcomes
+table(Lab.NegMood.Drop$Sample) #which samples gave data
+#Number of samples with craving data
+length(levels(Lab.NegMood.Drop$Sample)) #12 samples with NegMood outcomes
+
+#Aggregate craving effect sizes
+Lab.NegMood.Drop.ES <- agg(data=Lab.NegMood.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(Lab.NegMood.Drop.ES)[names(Lab.NegMood.Drop.ES)=="id"] <- "Sample"
+dim(Lab.NegMood.Drop.ES) #12 effect sizes
+
+#merge aggregated effect sizes with 
+dim(Lab.NegMood.Drop.ES)
+dim(Lab.Samples)
+Lab.NegMood.Drop.ES <- inner_join(Lab.NegMood.Drop.ES, Lab.Samples, by="Sample")
+dim(Lab.NegMood.Drop.ES) #12 effect sizes across samples
+
+#reset levels of Med and Sample
+Lab.NegMood.Drop.ES$Med <- factor(Lab.NegMood.Drop.ES$Med)
+Lab.NegMood.Drop.ES$Sample <- factor(Lab.NegMood.Drop.ES$Sample)
+
+#count number of NegMood outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(Lab.NegMood.Drop.ES)[1])
+{
+  Lab.NegMood.Drop.ES$Outcomes[i] <- nrow(subset(Lab.NegMood.Drop, Sample==Lab.NegMood.Drop.ES$Sample[i]))
+}
+
+#NegMood - RMA Analyses
+rma.NegMood.Drop<- rma.recenterMed.Lab(Lab.NegMood.Drop.ES, abr="NM.")
+
+
+#NegMood - Forest Plot
+#Saving Size 10x10
+forest.rma(rma.NegMood.Drop$rma.uncent,
+           slab = paste(Lab.NegMood.Drop.ES$Author, Lab.NegMood.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(Lab.NegMood.Drop.ES$Med), Lab.NegMood.Drop.ES$MaxDose, round(Lab.NegMood.Drop.ES$DpM, 1), round(Lab.NegMood.Drop.ES$MaxAlcDose, 3)),
+           ilab.xpos = c(-2.5, -1.6, 2.1, 2.6),
+           ilab.pos=c(4,4,4,4),
+           order=order(Lab.NegMood.Drop.ES$Med),
+           xlab="Hedge's G")
+text(-4, 14, "Author(s) and Year", pos = 4, cex=1)
+text(-2.5, 14, "Medication", pos = 4, cex=1)
+text(-1.6, 14, "Dose", pos = 4, cex=1)
+text(2.1, 14, "DpM", pos = 4, cex=1)
+text(2.6, 14, "BrAC", pos = 4, cex=1)
+text(3.2, 14, "Hedge's G [95% CI]", pos = 4, cex=1)
+text(0, 15, "Alcohol Negative Mood - Liberal Dropping", cex=1.2)
+
+#funnel plot
+NegMood.Funnel.Drop <- gg.funnel(es=Lab.NegMood.Drop.ES$es, es.var=Lab.NegMood.Drop.ES$var, 
+                                 mean.effect=rma.NegMood.Drop$ES.mean, se.effect=rma.NegMood.Drop$ES.SEM,
+                                 title="Lab Outcomes - Alcohol NegMood\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                                 lab=factor(Lab.NegMood.Drop.ES$Med), labsTitle="Medication")
+NegMood.Funnel.Drop <- NegMood.Funnel.Drop  + annotate("rect", xmin = rma.NegMood.Drop$ES.mean+1.96*0.4, xmax = 1.2, ymin = 0, ymax = 0.4, alpha = .1, fill="black")
+NegMood.Funnel.Drop
+#ggsave(NegMood.Funnel.Drop, filename="NegMood.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.NegMood.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = 2.4136, p = 0.0158
+
+#Plot meta-analyzed effect sizes
+rma.NegMood.Drop$ES.est$Med <- factor(rma.NegMood.Drop$ES.est$Med)
+NegMood.ES.Drop.Plot <- ggplot(rma.NegMood.Drop$ES.est, aes(x=NM.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = NM.metaES - NM.metaES.se, xmax = NM.metaES + NM.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("NegMood Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.NegMood.Drop$ES.est$Med))) +
+  ggtitle("NegMood Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+NegMood.ES.Drop.Plot
+#ggsave(NegMood.ES.Drop.Plot, filename="NegMood.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+#Save Medication Values
+Full.ES.Drop <- full_join(Full.ES.Drop, rma.NegMood.Drop$ES.est, by="Med")
