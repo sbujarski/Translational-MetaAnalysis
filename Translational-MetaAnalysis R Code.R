@@ -2792,3 +2792,188 @@ NegMood.ES.Drop.Plot
 
 #Save Medication Values
 Full.ES.Drop <- full_join(Full.ES.Drop, rma.NegMood.Drop$ES.est, by="Med")
+
+
+#HEAVY DRINKING OUTCOME - Liberal Approach----
+
+#impute no stat effect sizes to p=0.5
+RCT.Heavy.Drop <- subset(RCT.Heavy, NoStat==0)
+
+#reset levels of Med and Sample
+RCT.Heavy.Drop$Med <- factor(RCT.Heavy.Drop$Med)
+RCT.Heavy.Drop$Sample <- factor(RCT.Heavy.Drop$Sample)
+
+#checks
+dim(RCT.Heavy.Drop) #182 effect sizes
+table(RCT.Heavy.Drop$Med)
+length(table(RCT.Heavy.Drop$Med)) #18 medications with Heavy Drinking outcomes
+table(RCT.Heavy.Drop$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Heavy.Drop$Sample)) # 104 samples with Heavy Drinking outcomes
+
+#Aggregate Heavy effect sizes
+RCT.Heavy.Drop.ES <- agg(data=RCT.Heavy.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(RCT.Heavy.Drop.ES)[names(RCT.Heavy.Drop.ES)=="id"] <- "Sample"
+dim(RCT.Heavy.Drop.ES) #104 effect sizes
+
+#merge aggregated effect sizes with 
+dim(RCT.Heavy.Drop.ES)
+dim(RCT.Samples)
+RCT.Heavy.Drop.ES <- inner_join(RCT.Heavy.Drop.ES, RCT.Samples, by="Sample")
+dim(RCT.Heavy.Drop.ES) #104 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Heavy.Drop.ES$Med <- factor(RCT.Heavy.Drop.ES$Med)
+RCT.Heavy.Drop.ES$Sample <- factor(RCT.Heavy.Drop.ES$Sample)
+
+#count number of Heavy outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(RCT.Heavy.Drop.ES)[1])
+{
+  RCT.Heavy.Drop.ES$Outcomes[i] <- nrow(subset(RCT.Heavy.Drop, Sample==RCT.Heavy.Drop.ES$Sample[i]))
+}
+
+#Heavy - RMA Analyses
+rma.Heavy.Drop<- rma.recenterMed.RCT(RCT.Heavy.Drop.ES, abr="He.")
+
+#Heavy - Forest Plot
+#Saving Size 10x15
+forest.rma(rma.Heavy.Drop$rma.uncent,
+           slab = paste(RCT.Heavy.Drop.ES$Author, RCT.Heavy.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Heavy.Drop.ES$Med), RCT.Heavy.Drop.ES$MaxDose, round(RCT.Heavy.Drop.ES$TrxDur, 1)),
+           ilab.xpos = c(-4, -3, 2.5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Heavy.Drop.ES$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-6.5, 106, "Author(s) and Year", pos = 4, cex=0.6)
+text(-4, 106, "Medication", pos = 4, cex=0.6)
+text(-3, 106, "Dose", pos = 4, cex=0.6)
+text(2.5, 106, "Treatment Duration", pos = 4, cex=0.6)
+text(5.5, 106, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 108, "Heavy Drinking - Liberal Dropping", cex=.8)
+
+#funnel plot
+Heavy.Funnel.Drop <- gg.funnel(es=RCT.Heavy.Drop.ES$es, es.var=RCT.Heavy.Drop.ES$var, 
+                              mean.effect=rma.Heavy.Drop$ES.mean, se.effect=rma.Heavy.Drop$ES.SEM,
+                              title="RCT Outcomes - Heavy Drinking\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                              lab=factor(RCT.Heavy.Drop.ES$Med), labsTitle="Medication")
+Heavy.Funnel.Drop <- Heavy.Funnel.Drop + annotate("rect", xmin = rma.Heavy.Drop$ES.mean+1.96*0.6, xmax = 1.6, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Heavy.Funnel.Drop
+#ggsave(Heavy.Funnel.Drop, filename="Heavy.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Heavy.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = -2.5376, p = 0.0112 #SIGNIFICANT ASSYMETRY
+
+#Plot meta-analyzed effect sizes
+rma.Heavy.Drop$ES.est$Med <- factor(rma.Heavy.Drop$ES.est$Med)
+Heavy.ES.Drop.Plot <- ggplot(rma.Heavy.Drop$ES.est, aes(x=He.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = He.metaES - He.metaES.se, xmax = He.metaES + He.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Heavy Drinking Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Heavy.Drop$ES.est$Med))) +
+  ggtitle("Heavy Drinking Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+Heavy.ES.Drop.Plot
+#ggsave(Heavy.ES.Drop.Plot, filename="Heavy.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES.Drop <- full_join(Full.ES.Drop, rma.Heavy.Drop$ES.est, by="Med")
+
+
+#ABSTINENCE DRINKING OUTCOME - Liberal Approach----
+
+#impute no stat effect sizes to p=0.5
+RCT.Abstinence.Drop <- subset(RCT.Abstinence, NoStat==0)
+
+#reset levels of Med and Sample
+RCT.Abstinence.Drop$Med <- factor(RCT.Abstinence.Drop$Med)
+RCT.Abstinence.Drop$Sample <- factor(RCT.Abstinence.Drop$Sample)
+
+#checks
+dim(RCT.Abstinence.Drop) #154 effect sizes
+table(RCT.Abstinence.Drop$Med)
+length(table(RCT.Abstinence.Drop$Med)) #19 medications with Abstinence outcomes
+table(RCT.Abstinence.Drop$Sample) #which samples gave data
+#Number of samples with NegMood data
+length(levels(RCT.Abstinence.Drop$Sample)) #111 samples with Abstinence outcomes
+
+#Aggregate Abstinence effect sizes
+RCT.Abstinence.Drop.ES <- agg(data=RCT.Abstinence.Drop, id=Sample, es=ES, var=ESvar,  method = "BHHR", cor=.6)
+names(RCT.Abstinence.Drop.ES)[names(RCT.Abstinence.Drop.ES)=="id"] <- "Sample"
+dim(RCT.Abstinence.Drop.ES) #111 effect sizes
+
+#merge aggregated effect sizes with 
+dim(RCT.Abstinence.Drop.ES)
+dim(RCT.Samples)
+RCT.Abstinence.Drop.ES <- inner_join(RCT.Abstinence.Drop.ES, RCT.Samples, by="Sample")
+dim(RCT.Abstinence.Drop.ES) #111 effect sizes across samples
+
+#reset levels of Med and Sample
+RCT.Abstinence.Drop.ES$Med <- factor(RCT.Abstinence.Drop.ES$Med)
+RCT.Abstinence.Drop.ES$Sample <- factor(RCT.Abstinence.Drop.ES$Sample)
+
+#count number of Abstinence outcomes that were aggregated for each aggregated ES
+#count outcomes
+for (i in 1:dim(RCT.Abstinence.Drop.ES)[1])
+{
+  RCT.Abstinence.Drop.ES$Outcomes[i] <- nrow(subset(RCT.Abstinence.Drop, Sample==RCT.Abstinence.Drop.ES$Sample[i]))
+}
+
+#Abstinence - RMA Analyses
+rma.Abstinence.Drop<- rma.recenterMed.RCT(RCT.Abstinence.Drop.ES, abr="Ab.")
+
+#Abstinence - Forest Plot
+#Saving Size 10x15
+forest.rma(rma.Abstinence.Drop$rma.uncent,
+           slab = paste(RCT.Abstinence.Drop.ES$Author, RCT.Abstinence.Drop.ES$Year,sep=", "),
+           ilab = cbind(as.character(RCT.Abstinence.Drop.ES$Med), RCT.Abstinence.Drop.ES$MaxDose, round(RCT.Abstinence.Drop.ES$TrxDur, 1)),
+           ilab.xpos = c(-6.5, -5, 5),
+           ilab.pos=c(4,4,4),
+           order=order(RCT.Abstinence.Drop.ES$Med),
+           xlab="Hedge's G", 
+           cex=0.5)
+text(-9.5, 113, "Author(s) and Year", pos = 4, cex=0.6)
+text(-6.5, 113, "Medication", pos = 4, cex=0.6)
+text(-5, 113, "Dose", pos = 4, cex=0.6)
+text(5, 113, "Treatment Duration", pos = 4, cex=0.6)
+text(8.5, 113, "Hedge's G [95% CI]", pos = 4, cex=0.6)
+text(0, 115, "Abstinence - Liberal Dropping", cex=.8)
+
+#funnel plot
+Abstinence.Funnel.Drop <- gg.funnel(es=RCT.Abstinence.Drop.ES$es, es.var=RCT.Abstinence.Drop.ES$var, 
+                               mean.effect=rma.Abstinence.Drop$ES.mean, se.effect=rma.Abstinence.Drop$ES.SEM,
+                               title="RCT Outcomes - Abstinence\nLiberal Dropping", x.lab="Effect Size (Hedge's G)", y.lab="Effect Size Std Error", 
+                               lab=factor(RCT.Abstinence.Drop.ES$Med), labsTitle="Medication")
+Abstinence.Funnel.Drop <- Abstinence.Funnel.Drop + annotate("rect", xmin = rma.Abstinence.Drop$ES.mean+1.96*0.6, xmax = 3.2, ymin = 0, ymax = 0.6, alpha = .1, fill="black") +
+  annotate("rect", xmin = rma.Abstinence.Drop$ES.mean-1.96*0.6, xmax = -2, ymin = 0, ymax = 0.6, alpha = .1, fill="black")
+Abstinence.Funnel.Drop
+#ggsave(Abstinence.Funnel.Drop, filename="Abstinence.Funnel.Drop.png", width = 6, height = 5, dpi=400)
+
+#test of funnel plot asymmetry
+regtest(rma.Abstinence.Drop$rma.uncent, model="rma", predictor="sei", ret.fit=F)
+#test for funnel plot asymmetry: z = -0.0490, p = 0.9609
+
+#Plot meta-analyzed effect sizes
+rma.Abstinence.Drop$ES.est$Med <- factor(rma.Abstinence.Drop$ES.est$Med)
+Abstinence.ES.Drop.Plot <- ggplot(rma.Abstinence.Drop$ES.est, aes(x=Ab.metaES, y=Med)) +
+  geom_vline(xintercept = 0, linetype='11') + 
+  geom_errorbarh(aes(xmin = Ab.metaES - Ab.metaES.se, xmax = Ab.metaES + Ab.metaES.se), height = 0.2) + 
+  geom_point(size=2) + 
+  scale_x_continuous("Abstinence Effect Size (Hedge's g)") + 
+  scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Abstinence.Drop$ES.est$Med))) +
+  ggtitle("Abstinence Effect Sizes\nLiberal Dropping") +
+  SpTheme()
+Abstinence.ES.Drop.Plot
+#ggsave(Abstinence.ES.Drop.Plot, filename="Abstinence.ES.Drop.Plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Save Medication Values
+Full.ES.Drop <- full_join(Full.ES.Drop, rma.Abstinence.Drop$ES.est, by="Med")
+
+
+
+
