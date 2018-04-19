@@ -3287,7 +3287,7 @@ Se.Ab.WYbwlsDrop <- WYbwls(x=Se.Ab.ES.Drop$Se.metaES, xsd=Se.Ab.ES.Drop$Se.metaE
 # 
 # r:   	 0.3061 
 # r^2: 	 0.0937 
-# p:   	 0.086137515075164 
+# p:   	 0.086137515075164     #TREND LEVEL EFFECT GREATER INCREASES IN SEDATION ASSOCIATED WITH GREATER ABSTINENCE
 
 #Modify plot with specific labels
 Se.Ab.WYbwlsDrop.plot <- Se.Ab.WYbwlsDrop$plot + 
