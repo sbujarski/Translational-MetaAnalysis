@@ -2976,4 +2976,394 @@ Full.ES.Drop <- full_join(Full.ES.Drop, rma.Abstinence.Drop$ES.est, by="Med")
 
 
 
+#WILLIAMSON-YORK TRANSLATIONAL ANALYSIS - Liberal Dropping----
+
+#Lab Craving - Heavy Drinking----
+Cr.He.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "Cr.metaES", "Cr.metaES.se", "He.metaES", "He.metaES.se")])
+dim(Cr.He.ES.Drop)
+#11 medications for this analysis
+
+Cr.He.WYbwlsDrop <- WYbwls(x=Cr.He.ES.Drop$Cr.metaES, xsd=Cr.He.ES.Drop$Cr.metaES.se,
+                           y=Cr.He.ES.Drop$He.metaES, ysd=Cr.He.ES.Drop$He.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -12.312 	 91.42 
+# Slope 	 -32.028 	 239.517 
+# 
+# r:   	 -0.0067 
+# r^2: 	 0 
+# p:   	 0.896566832546067 
+
+#Modify plot with specific labels
+Cr.He.WYbwlsDrop.plot <- Cr.He.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Craving and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)", limits=c(-1, 1.5))
+Cr.He.WYbwlsDrop.plot
+#ggsave(Cr.He.WYbwlsDrop.plot, filename="Cr.He.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Cr.He.ES.Drop$meanSD <- (Cr.He.ES.Drop$Cr.metaES.se + Cr.He.ES.Drop$He.metaES.se)/2
+Cr.He.ES.Drop$Wsize <- 1/(Cr.He.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Cr.He.ES.Drop$Cr.metaES, xsd=Cr.He.ES.Drop$Cr.metaES.se, y=Cr.He.ES.Drop$He.metaES, ysd=Cr.He.ES.Drop$He.metaES.se)
+Cr.He.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Cr.He.ES.Drop, aes(x=Cr.metaES, y=He.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.25, y=1, label=paste("italic(R)[WY]^2 == ",round(Cr.He.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.25, y=.9, label=paste("italic(p)[WY] == ",round(Cr.He.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Craving and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") + 
+  SpTheme()
+Cr.He.EllipseDrop.plot
+#ggsave(Cr.He.EllipseDrop.plot, filename="Cr.He.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Stimulation - Heavy Drinking----
+St.He.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "St.metaES", "St.metaES.se", "He.metaES", "He.metaES.se")])
+dim(St.He.ES.Drop)
+#12 medications for this analysis
+
+St.He.WYbwlsDrop <- WYbwls(x=St.He.ES.Drop$St.metaES, xsd=St.He.ES.Drop$St.metaES.se,
+                           y=St.He.ES.Drop$He.metaES, ysd=St.He.ES.Drop$He.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.451 	 0.253 
+# Slope 	 2.1876 	 1.621 
+# 
+# r:   	 0.1636 
+# r^2: 	 0.0268 
+# p:   	 0.206941761309258 
+
+#Modify plot with specific labels
+St.He.WYbwlsDrop.plot <- St.He.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Stimulation and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)", limits=c(-1.1, 2.5)) + theme(legend.position=c(.25,.85))
+St.He.WYbwlsDrop.plot
+#ggsave(St.He.WYbwlsDrop.plot, filename="St.He.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+St.He.ES.Drop$meanSD <- (St.He.ES.Drop$St.metaES.se + St.He.ES.Drop$He.metaES.se)/2
+St.He.ES.Drop$Wsize <- 1/(St.He.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=St.He.ES.Drop$St.metaES, xsd=St.He.ES.Drop$St.metaES.se, y=St.He.ES.Drop$He.metaES, ysd=St.He.ES.Drop$He.metaES.se)
+St.He.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=St.He.ES.Drop, aes(x=St.metaES, y=He.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=1, y=1, label=paste("italic(R)[WY]^2 == ",round(St.He.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=1, y=.9, label=paste("italic(p)[WY] == ",round(St.He.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Stimulation and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") + 
+  SpTheme()
+St.He.EllipseDrop.plot
+#ggsave(St.He.EllipseDrop.plot, filename="St.He.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Sedation - Heavy Drinking----
+Se.He.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "Se.metaES", "Se.metaES.se", "He.metaES", "He.metaES.se")])
+dim(Se.He.ES.Drop)
+#12 medications for this analysis
+
+Se.He.WYbwlsDrop <- WYbwls(x=Se.He.ES.Drop$Se.metaES, xsd=Se.He.ES.Drop$Se.metaES.se,
+                           y=Se.He.ES.Drop$He.metaES, ysd=Se.He.ES.Drop$He.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.249 	 0.833 
+# Slope 	 -6.0245 	 9.055 
+# 
+# r:   	 -0.1896 
+# r^2: 	 0.0359 
+# p:   	 0.520893715067915 
+
+#Modify plot with specific labels
+Se.He.WYbwlsDrop.plot <- Se.He.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Sedation and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") + theme(legend.position=c(.25,.3))
+Se.He.WYbwlsDrop.plot
+#ggsave(Se.He.WYbwlsDrop.plot, filename="Se.He.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Se.He.ES.Drop$meanSD <- (Se.He.ES.Drop$Se.metaES.se + Se.He.ES.Drop$He.metaES.se)/2
+Se.He.ES.Drop$Wsize <- 1/(Se.He.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Se.He.ES.Drop$Se.metaES, xsd=Se.He.ES.Drop$Se.metaES.se, y=Se.He.ES.Drop$He.metaES, ysd=Se.He.ES.Drop$He.metaES.se)
+Se.He.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Se.He.ES.Drop, aes(x=Se.metaES, y=He.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=.8, y=1, label=paste("italic(R)[WY]^2 == ",round(Se.He.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=.8, y=.9, label=paste("italic(p)[WY] == ",round(Se.He.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Sedation and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)") + 
+  SpTheme()
+Se.He.EllipseDrop.plot
+#ggsave(Se.He.EllipseDrop.plot, filename="Se.He.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+
+#Lab NegMood - Heavy Drinking----
+NM.He.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "NM.metaES", "NM.metaES.se", "He.metaES", "He.metaES.se")])
+dim(NM.He.ES.Drop)
+#4 medications for this analysis
+
+NM.He.WYbwlsDrop <- WYbwls(x=NM.He.ES.Drop$NM.metaES, xsd=NM.He.ES.Drop$NM.metaES.se,
+                           y=NM.He.ES.Drop$He.metaES, ysd=NM.He.ES.Drop$He.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.803 	 4.072 
+# Slope 	 2.4912 	 19.663 
+# 
+# r:   	 0.3154 
+# r^2: 	 0.0995 
+# p:   	 0.910770197807318 
+
+#Modify plot with specific labels
+NM.He.WYbwlsDrop.plot <- NM.He.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Negative Mood and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol NegMood (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)")
+NM.He.WYbwlsDrop.plot
+#ggsave(NM.He.WYbwlsDrop.plot, filename="NM.He.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+NM.He.ES.Drop$meanSD <- (NM.He.ES.Drop$NM.metaES.se + NM.He.ES.Drop$He.metaES.se)/2
+NM.He.ES.Drop$Wsize <- 1/(NM.He.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=NM.He.ES.Drop$NM.metaES, xsd=NM.He.ES.Drop$NM.metaES.se, y=NM.He.ES.Drop$He.metaES, ysd=NM.He.ES.Drop$He.metaES.se)
+NM.He.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=NM.He.ES.Drop, aes(x=NM.metaES, y=He.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.7, y=-0.6, label=paste("italic(R)[WY]^2 == ",round(NM.He.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.7, y=-0.65, label=paste("italic(p)[WY] == ",round(NM.He.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Negative Mood and RCT Heavy Drinking\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol NegMood (Hedge's G)") +
+  scale_y_continuous("RCT Heavy Drinking Outcomes (Hedge's G)", limits = c(-0.7, 0.1)) + 
+  SpTheme()
+NM.He.EllipseDrop.plot
+#ggsave(NM.He.EllipseDrop.plot, filename="NM.He.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+
+
+#Lab Craving - Abstinence----
+Cr.Ab.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "Cr.metaES", "Cr.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Cr.Ab.ES.Drop)
+#11 medications for this analysis
+
+Cr.Ab.WYbwlsDrop <- WYbwls(x=Cr.Ab.ES.Drop$Cr.metaES, xsd=Cr.Ab.ES.Drop$Cr.metaES.se,
+                           y=Cr.Ab.ES.Drop$Ab.metaES, ysd=Cr.Ab.ES.Drop$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 1.954 	 2.815 
+# Slope 	 5.1363 	 7.326 
+# 
+# r:   	 0.2345 
+# r^2: 	 0.055 
+# p:   	 0.500963589983834 
+
+#Modify plot with specific labels
+Cr.Ab.WYbwlsDrop.plot <- Cr.Ab.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Craving and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+Cr.Ab.WYbwlsDrop.plot
+#ggsave(Cr.Ab.WYbwlsDrop.plot, filename="Cr.Ab.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Cr.Ab.ES.Drop$meanSD <- (Cr.Ab.ES.Drop$Cr.metaES.se + Cr.Ab.ES.Drop$Ab.metaES.se)/2
+Cr.Ab.ES.Drop$Wsize <- 1/(Cr.Ab.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Cr.Ab.ES.Drop$Cr.metaES, xsd=Cr.Ab.ES.Drop$Cr.metaES.se, y=Cr.Ab.ES.Drop$Ab.metaES, ysd=Cr.Ab.ES.Drop$Ab.metaES.se)
+Cr.Ab.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Cr.Ab.ES.Drop, aes(x=Cr.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.25, y=1, label=paste("italic(R)[WY]^2 == ",round(Cr.Ab.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.25, y=.9, label=paste("italic(p)[WY] == ",round(Cr.Ab.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Craving and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+Cr.Ab.EllipseDrop.plot
+#ggsave(Cr.Ab.EllipseDrop.plot, filename="Cr.Ab.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Stimulation - Abstinence----
+St.Ab.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "St.metaES", "St.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(St.Ab.ES.Drop)
+#12 medications for this analysis
+
+St.Ab.WYbwlsDrop <- WYbwls(x=St.Ab.ES.Drop$St.metaES, xsd=St.Ab.ES.Drop$St.metaES.se,
+                           y=St.Ab.ES.Drop$Ab.metaES, ysd=St.Ab.ES.Drop$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.165 	 0.092 
+# Slope 	 -0.6643 	 0.323 
+# 
+# r:   	 -0.1564 
+# r^2: 	 0.0245 
+# p:   	 0.0669699255622393        #TREND LEVEL EFFECT GREATER REDUCTIONS IN STIMULATION ASSOCIATED WITH GREATER ABSTINENCE
+
+#Modify plot with specific labels
+St.Ab.WYbwlsDrop.plot <- St.Ab.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+St.Ab.WYbwlsDrop.plot
+#ggsave(St.Ab.WYbwlsDrop.plot, filename="St.Ab.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+St.Ab.ES.Drop$meanSD <- (St.Ab.ES.Drop$St.metaES.se + St.Ab.ES.Drop$Ab.metaES.se)/2
+St.Ab.ES.Drop$Wsize <- 1/(St.Ab.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=St.Ab.ES.Drop$St.metaES, xsd=St.Ab.ES.Drop$St.metaES.se, y=St.Ab.ES.Drop$Ab.metaES, ysd=St.Ab.ES.Drop$Ab.metaES.se)
+St.Ab.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=St.Ab.ES.Drop, aes(x=St.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=1.2, y=-0.8, label=paste("italic(R)[WY]^2 == ",round(St.Ab.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=1.2, y=-0.9, label=paste("italic(p)[WY] == ",round(St.Ab.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+St.Ab.EllipseDrop.plot
+#ggsave(St.Ab.EllipseDrop.plot, filename="St.Ab.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+#Lab Sedation - Abstinence----
+Se.Ab.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "Se.metaES", "Se.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(Se.Ab.ES.Drop)
+#12 medications for this analysis
+
+Se.Ab.WYbwlsDrop <- WYbwls(x=Se.Ab.ES.Drop$Se.metaES, xsd=Se.Ab.ES.Drop$Se.metaES.se,
+                           y=Se.Ab.ES.Drop$Ab.metaES, ysd=Se.Ab.ES.Drop$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 0.023 	 0.103 
+# Slope 	 0.8639 	 0.454 
+# 
+# r:   	 0.3061 
+# r^2: 	 0.0937 
+# p:   	 0.086137515075164 
+
+#Modify plot with specific labels
+Se.Ab.WYbwlsDrop.plot <- Se.Ab.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Sedation and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+Se.Ab.WYbwlsDrop.plot
+#ggsave(Se.Ab.WYbwlsDrop.plot, filename="Se.Ab.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+Se.Ab.ES.Drop$meanSD <- (Se.Ab.ES.Drop$Se.metaES.se + Se.Ab.ES.Drop$Ab.metaES.se)/2
+Se.Ab.ES.Drop$Wsize <- 1/(Se.Ab.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=Se.Ab.ES.Drop$Se.metaES, xsd=Se.Ab.ES.Drop$Se.metaES.se, y=Se.Ab.ES.Drop$Ab.metaES, ysd=Se.Ab.ES.Drop$Ab.metaES.se)
+Se.Ab.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=Se.Ab.ES.Drop, aes(x=Se.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=.8, y=-0.6, label=paste("italic(R)[WY]^2 == ",round(Se.Ab.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=.8, y=-0.7, label=paste("italic(p)[WY] == ",round(Se.Ab.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Sedation and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+Se.Ab.EllipseDrop.plot
+#ggsave(Se.Ab.EllipseDrop.plot, filename="Se.Ab.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
+
+#Lab NegMood - Abstinence----
+NM.Ab.ES.Drop <- na.exclude(Full.ES.Drop[,c("Med", "NM.metaES", "NM.metaES.se", "Ab.metaES", "Ab.metaES.se")])
+dim(NM.Ab.ES.Drop)
+#4 medications for this analysis
+
+NM.Ab.WYbwlsDrop <- WYbwls(x=NM.Ab.ES.Drop$NM.metaES, xsd=NM.Ab.ES.Drop$NM.metaES.se,
+                           y=NM.Ab.ES.Drop$Ab.metaES, ysd=NM.Ab.ES.Drop$Ab.metaES.se,
+                           print=T, plot=T, tol=1e-08)
+
+# # Williamson-York Algorithm for Bivariate Weighted Least Squared 
+# 
+# Coefficients: 
+#   Est  	   SE 
+# Int   	 -0.176 	 1.551 
+# Slope 	 1.9188 	 7.195 
+# 
+# r:   	 0.3558 
+# r^2: 	 0.1266 
+# p:   	 0.814691624182437 
+
+#Modify plot with specific labels
+NM.Ab.WYbwlsDrop.plot <- NM.Ab.WYbwlsDrop$plot + 
+  ggtitle("Laboratory Negative Mood and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol NegMood (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)")
+NM.Ab.WYbwlsDrop.plot
+#ggsave(NM.Ab.WYbwlsDrop.plot, filename="NM.Ab.WYbwlsDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+#Plot without the regression lines
+NM.Ab.ES.Drop$meanSD <- (NM.Ab.ES.Drop$NM.metaES.se + NM.Ab.ES.Drop$Ab.metaES.se)/2
+NM.Ab.ES.Drop$Wsize <- 1/(NM.Ab.ES.Drop$meanSD^2)
+Data.Ellipse <- CompEllipse(x=NM.Ab.ES.Drop$NM.metaES, xsd=NM.Ab.ES.Drop$NM.metaES.se, y=NM.Ab.ES.Drop$Ab.metaES, ysd=NM.Ab.ES.Drop$Ab.metaES.se)
+NM.Ab.EllipseDrop.plot <- ggplot() +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
+  geom_point(data=NM.Ab.ES.Drop, aes(x=NM.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
+  annotate("text", x=0.8, y=0.5, label=paste("italic(R)[WY]^2 == ",round(NM.Ab.WYbwlsDrop$r2, 3)), parse=TRUE) + 
+  annotate("text", x=0.8, y=0.45, label=paste("italic(p)[WY] == ",round(NM.Ab.WYbwlsDrop$p, 3)), parse=TRUE) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Negative Mood and RCT Abstinence\n- Liberal Dropping -") +
+  scale_x_continuous("Laboratory Effects on Alcohol NegMood (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+NM.Ab.EllipseDrop.plot
+#ggsave(NM.Ab.EllipseDrop.plot, filename="NM.Ab.EllipseDrop.plot.png", width = 6, height = 5, dpi = 400)
+
+
 
