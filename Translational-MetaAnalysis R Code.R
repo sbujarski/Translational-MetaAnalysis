@@ -394,12 +394,20 @@ table(Lab.noSA.main$OutDomain)/408
 #      72          46         171         119 
 #     18%         11%         42%         29%
 
-OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoStat.str), width = 0.8) + 
+Lab.noSA.main$OutDomain <- factor(Lab.noSA.main$OutDomain, levels=c("Stimulation", "Sedation", "Craving", "NegMood"))
+OutDomain.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(width = 0.8) + 
   ggtitle("Number of Effect Sizes Per Domain") + 
   scale_x_discrete("Outcome Domain") +
   SpTheme(legend.position = "right") + theme(legend.title = element_blank())
 OutDomain.plot
 #ggsave(OutDomain.plot, filename="OutDomain.plot.png", width = 6, height = 5, dpi = 300)
+
+OutDomain.NoStat.plot <- ggplot(Lab.noSA.main, aes(OutDomain)) + geom_bar(aes(fill=NoStat.str), width = 0.8) + 
+  ggtitle("Number of Effect Sizes Per Domain") + 
+  scale_x_discrete("Outcome Domain") +
+  SpTheme(legend.position = c(0.8,0.8)) + theme(legend.title = element_blank())
+OutDomain.NoStat.plot
+#ggsave(OutDomain.NoStat.plot, filename="OutDomain.NoStat.plot.png", width = 6, height = 5, dpi = 300)
 
 Lab.noSA.main$Med <- factor(Lab.noSA.main$Med)
 Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill=NoStat.str), width=0.8) +
@@ -987,6 +995,19 @@ Medication.Cochrane.Plot <- ggplot(RCT.Clean, aes(Med)) + geom_bar(aes(fill=Coch
 Medication.Cochrane.Plot
 #ggsave(Medication.Cochrane.Plot, filename="Medication.Cochrane.Plot.png", width = 5, height = 9, dpi = 300)
 
+RCT.OutDomain.plot <- ggplot(RCT.Clean, aes(OutDomain)) + geom_bar(width = 0.8) + 
+  ggtitle("Number of Effect Sizes Per Domain") + 
+  scale_x_discrete("Outcome Domain") +
+  SpTheme(legend.position = "right") + theme(legend.title = element_blank())
+RCT.OutDomain.plot
+#ggsave(RCT.OutDomain.plot, filename="RCT.OutDomain.plot.png", width = 6, height = 5, dpi = 300)
+
+RCT.OutDomain.NoStat.plot <- ggplot(RCT.Clean, aes(OutDomain)) + geom_bar(aes(fill=as.factor(-NoStat)), width = 0.8) + 
+  ggtitle("Number of Effect Sizes Per Domain") + 
+  scale_x_discrete("Outcome Domain") +
+  SpTheme() + theme(legend.title = element_blank())
+RCT.OutDomain.NoStat.plot
+#ggsave(RCT.OutDomain.NoStat.plot, filename="RCT.OutDomain.NoStat.plot.png", width = 6, height = 5, dpi = 300)
 
 #META-ANALYSIS OF RCT OUTCOMES----
 
@@ -1558,10 +1579,10 @@ for(i in 1:dim(Lab.Stimulation)[1]){
 
 #checks
 length(Lab.Stimulation$ES.Imp) #119 effect sizes
-length(table(Lab.Stimulation$Med)) #24 medications with craving outcomes
+length(table(Lab.Stimulation$Med)) #24 medications with stimulation outcomes
 table(Lab.Stimulation$Sample) #which samples gave data
 #Number of samples with craving data
-length(levels(Lab.Stimulation$Sample)) # 50 samples with craving outcomes
+length(levels(Lab.Stimulation$Sample)) # 50 samples with stimulation outcomes
 
 #Aggregate craving effect sizes
 Lab.Stimulation.ES.Imp <- agg(data=Lab.Stimulation, id=Sample, es=ES.Imp, var=ES.Impvar,  method = "BHHR", cor=.6)
@@ -1948,7 +1969,7 @@ Full.ES.Imp <- full_join(Full.ES.Imp, rma.Heavy.Imp$ES.est, by="Med")
 
 
 
-#ABSTINENCE DRINKING OUTCOME - Moderate Approach----
+#ABSTINENCE OUTCOME - Moderate Approach----
 
 #impute no stat effect sizes to p=0.5
 RCT.Abstinence$ES.Imp <- NA
@@ -2039,9 +2060,9 @@ Abstinence.ES.Imp.Plot <- ggplot(rma.Abstinence.Imp$ES.est, aes(x=Ab.metaES, y=M
   geom_vline(xintercept = 0, linetype='11') + 
   geom_errorbarh(aes(xmin = Ab.metaES - Ab.metaES.se, xmax = Ab.metaES + Ab.metaES.se), height = 0.2) + 
   geom_point(size=2) + 
-  scale_x_continuous("Abstinence Drinking Effect Size (Hedge's g)") + 
+  scale_x_continuous("Abstinence Effect Size (Hedge's g)") + 
   scale_y_discrete(name=element_blank(), limits=rev(levels(rma.Abstinence.Imp$ES.est$Med))) +
-  ggtitle("Abstinence Drinking Effect Sizes\nModerate Imputation") +
+  ggtitle("Abstinence Effect Sizes\nModerate Imputation") +
   SpTheme()
 Abstinence.ES.Imp.Plot
 #ggsave(Abstinence.ES.Imp.Plot, filename="Abstinence.ES.Imp.Plot.png", width = 6, height = 5, dpi = 400)
@@ -2202,7 +2223,7 @@ Se.He.Ellipse.Imp.plot
 #Lab NegMood - Heavy Drinking----
 NM.He.ES.Imp <- na.exclude(Full.ES.Imp[,c("Med", "NM.metaES", "NM.metaES.se", "He.metaES", "He.metaES.se")])
 dim(NM.He.ES.Imp)
-#15 medications for this analysis
+#8 medications for this analysis
 
 NM.He.WYbwls.Imp <- WYbwls(x=NM.He.ES.Imp$NM.metaES, xsd=NM.He.ES.Imp$NM.metaES.se,
                            y=NM.He.ES.Imp$He.metaES, ysd=NM.He.ES.Imp$He.metaES.se,
@@ -2329,15 +2350,17 @@ St.Ab.WYbwls.Imp.plot
 St.Ab.ES.Imp$meanSD <- (St.Ab.ES.Imp$St.metaES.se + St.Ab.ES.Imp$Ab.metaES.se)/2
 St.Ab.ES.Imp$Wsize <- 1/(St.Ab.ES.Imp$meanSD^2)
 Data.Ellipse <- CompEllipse(x=St.Ab.ES.Imp$St.metaES, xsd=St.Ab.ES.Imp$St.metaES.se, y=St.Ab.ES.Imp$Ab.metaES, ysd=St.Ab.ES.Imp$Ab.metaES.se)
-St.Ab.Ellipse.Imp.plot <- ggplot() +
+St.Ab.Ellipse.Imp.plot <- ggplot(data=St.Ab.ES.Imp, aes(x=St.metaES, y=Ab.metaES)) +
   geom_hline(yintercept = 0, linetype='33') +
   geom_vline(xintercept = 0, linetype='33') +
   geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
-  geom_point(data=St.Ab.ES.Imp, aes(x=St.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
-  annotate("text", x=1, y=-0.2, label=paste("italic(R)[WY]^2 == ",round(St.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
-  annotate("text", x=1, y=-0.25, label=paste("italic(p)[WY] == ",round(St.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  geom_point(aes(size=Wsize), show.legend=F) +
+  stat_function(fun = function(x){0.135 - 0.1316*x}, colour = "black", size=2) + 
+  annotate("text", x=1, y=-0.3, label=paste("italic(r)[WY] == ",round(St.Ab.WYbwls.Imp$r, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=1, y=-0.4, label=paste("italic(R)[WY]^2 == ",round(St.Ab.WYbwls.Imp$r2, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=1, y=-0.5, label=paste("italic(p) == ",round(St.Ab.WYbwls.Imp$p, 3)), parse=TRUE, size=6) + 
   scale_size_continuous(range = c(2,7)) +
-  ggtitle("Laboratory Stimulation and RCT Abstinence\n- Moderate Imputation -") +
+  ggtitle("Laboratory Stimulation and RCT Abstinence\nModerate Imputation") +
   scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
   scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
   SpTheme()
@@ -2377,15 +2400,17 @@ Se.Ab.WYbwls.Imp.plot
 Se.Ab.ES.Imp$meanSD <- (Se.Ab.ES.Imp$Se.metaES.se + Se.Ab.ES.Imp$Ab.metaES.se)/2
 Se.Ab.ES.Imp$Wsize <- 1/(Se.Ab.ES.Imp$meanSD^2)
 Data.Ellipse <- CompEllipse(x=Se.Ab.ES.Imp$Se.metaES, xsd=Se.Ab.ES.Imp$Se.metaES.se, y=Se.Ab.ES.Imp$Ab.metaES, ysd=Se.Ab.ES.Imp$Ab.metaES.se)
-Se.Ab.Ellipse.Imp.plot <- ggplot() +
+Se.Ab.Ellipse.Imp.plot <- ggplot(data=Se.Ab.ES.Imp, aes(x=Se.metaES, y=Ab.metaES)) +
   geom_hline(yintercept = 0, linetype='33') +
   geom_vline(xintercept = 0, linetype='33') +
   geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
-  geom_point(data=Se.Ab.ES.Imp, aes(x=Se.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
-  annotate("text", x=0.7, y=-0.4, label=paste("italic(R)[WY]^2 == ",round(Se.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
-  annotate("text", x=0.7, y=-0.45, label=paste("italic(p)[WY] == ",round(Se.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  geom_point(aes(size=Wsize), show.legend=F) +
+  stat_function(fun = function(x){0.1 + 0.3636*x}, colour = "black", size=2) + 
+  annotate("text", x=0.7, y=-0.4, label=paste("italic(r)[WY] == ",round(Se.Ab.WYbwls.Imp$r, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.7, y=-0.5, label=paste("italic(R)[WY]^2 == ",round(Se.Ab.WYbwls.Imp$r2, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.7, y=-0.6, label=paste("italic(p) == ",round(Se.Ab.WYbwls.Imp$p, 3)), parse=TRUE, size=6) + 
   scale_size_continuous(range = c(2,7)) +
-  ggtitle("Laboratory Sedation and RCT Abstinence\n- Moderate Imputation -") +
+  ggtitle("Laboratory Sedation and RCT Abstinence\nModerate Imputation") +
   scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
   scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
   SpTheme()
