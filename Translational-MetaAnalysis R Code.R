@@ -3393,5 +3393,110 @@ NM.Ab.EllipseDrop.plot
 
 
 
+#Backup plots with error bars for presentation
+X <- c(7.042, 2.419, 3.371, 2.394, 3.633, 3.904, 2.915, 7.676, 3.338, 2.440, 3.073, 2.651, 4.593, 4.734, 6.614, 5.403, 6.529, 6.576, 8.415, 3.306)
+Xsd<-c(1.660, 1.296, 1.283, 0.403, 1.686, 0.793, 1.019, 0.376, 1.792, 1.215, 1.030, 0.706, 1.314, 0.246, 0.590, 1.697, 0.425, 0.708, 0.417, 0.957)
+Y <- c(5.393, 3.793, 5.055, 2.769, 9.481, 3.704, 0.408, 6.143, 3.754, 6.163, 1.012, 4.447, 4.465, 4.769, 5.623, 5.255, 9.506, 3.071, 5.640, 2.837)
+Ysd<-c(0.618, 1.523, 1.045, 0.208, 1.812, 1.774, 1.508, 1.599, 0.641, 0.723, 0.230, 0.774, 1.585, 0.369, 0.372, 1.087, 0.518, 1.122, 0.786, 1.184)
+XYData<-data.frame(X=X,Xsd=Xsd,Y=Y,Ysd=Ysd)
+XYData <- XYData/10
+
+WYtest <- WYbwls(x=XYData$X, xsd=XYData$Xsd, y=XYData$Y, ysd=XYData$Ysd, print=T, plot=T)
+
+XYData$meanSD <- (XYData$Xsd+XYData$Ysd)/2
+XYData$Wsize <- 1/(XYData$meanSD^2)
+WYline<-data.frame(X=c(min(XYData$X),max(XYData$X)))
+WYline$WY.Y<-WYtest$WY.Int+WYtest$WY.Slope*WYline$X
+
+WYsampleplot.ebars <- ggplot()+
+  geom_errorbar(data=XYData, aes(x=X, ymin = Y-Ysd, ymax=Y+Ysd), width = 0.03) +
+  geom_errorbarh(data=XYData, aes(x=X, y=Y, xmin = X-Xsd, xmax=X+Xsd), height = 0.03) +
+  geom_point(data=XYData, aes(x=X, y=Y), show.legend=F)+
+  scale_size_continuous(range = c(2,7))+
+  geom_smooth(data=XYData, method="lm",aes(x=X, y=Y), se=F, size=1)+
+  #geom_line(data=WYline, aes(x=X,y=WY.Y, linetype="Williamson-York"), colour="black", size=1)+
+  #scale_linetype_manual("Analysis Type", values = c("dashed", "solid"))+
+  ggtitle("Effect Size Uncertainty") + 
+  scale_x_continuous("Human Laboratory Effect Size (Hedge's G)")+
+  scale_y_continuous("Clinical Efficacy in RCT (Hedge's G)") +
+  SpTheme() + theme(legend.position = c(0.8,0.15), legend.key.width=unit(2,"line"))
+WYsampleplot.ebars
+ggsave(WYsampleplot.ebars, filename="WYsampleplot.ebars.png", height=3, width=4, dpi=500)
 
 
+WYsampleplot.ebars2 <- ggplot()+
+  geom_errorbar(data=XYData, aes(x=X, ymin = Y-Ysd, ymax=Y+Ysd), width = 0.03, colour="grey60") +
+  geom_errorbarh(data=XYData, aes(x=X, y=Y, xmin = X-Xsd, xmax=X+Xsd), height = 0.03, colour="grey60") +
+  geom_point(data=XYData, aes(x=X, y=Y, size=Wsize), show.legend=F, colour="grey45")+
+  scale_size_continuous(range = c(2,7))+
+  geom_smooth(data=XYData, method="lm",aes(x=X, y=Y, linetype="OLS"), se=F, size=2, colour="black")+
+  geom_line(data=WYline, aes(x=X,y=WY.Y, linetype="Williamson-York"), colour="black", size=2)+
+  scale_linetype_manual("Analysis Type", values = c('22', "solid"))+
+  ggtitle("Williamson-York Method") + 
+  scale_x_continuous("Human Laboratory Effect Size (Hedge's G)")+
+  scale_y_continuous("Clinical Efficacy in RCT (Hedge's G)") +
+  SpTheme() + theme(legend.position = c(0.8,0.13), legend.key.width=unit(2,"line"))
+WYsampleplot.ebars2
+ggsave(WYsampleplot.ebars2, filename="WYsampleplot.ebars2.png", height=4, width=5, dpi=400)
+
+
+
+St.Ab.ebars.Imp.plot <- ggplot(data=St.Ab.ES.Imp, aes(x=St.metaES, y=Ab.metaES)) +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_errorbar(aes(ymin = Ab.metaES-Ab.metaES.se, ymax=Ab.metaES+Ab.metaES.se), width = 0.03, colour="grey60") +
+  geom_errorbarh(aes(xmin = St.metaES-St.metaES.se, xmax=St.metaES+St.metaES.se), height = 0.03, colour="grey60") +
+  geom_point(aes(size=Wsize), show.legend=F, colour="grey45") +
+  stat_function(fun = function(x){0.135 - 0.1316*x}, colour = "black", size=2) + 
+  annotate("text", x=1, y=-0.3, label=paste("italic(r)[WY] == ",round(St.Ab.WYbwls.Imp$r, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=1, y=-0.4, label=paste("italic(R)[WY]^2 == ",round(St.Ab.WYbwls.Imp$r2, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=1, y=-0.5, label=paste("italic(p) == ",round(St.Ab.WYbwls.Imp$p, 3)), parse=TRUE, size=6) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Stimulation and RCT Abstinence\nModerate Imputation") +
+  scale_x_continuous("Laboratory Effects on Alcohol Stimulation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+St.Ab.ebars.Imp.plot
+ggsave(St.Ab.ebars.Imp.plot, filename="St.Ab.ebars.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+Se.Ab.ebars.Imp.plot <- ggplot(data=Se.Ab.ES.Imp, aes(x=Se.metaES, y=Ab.metaES)) +
+  geom_hline(yintercept = 0, linetype='33') +
+  geom_vline(xintercept = 0, linetype='33') +
+  geom_errorbar(aes(ymin = Ab.metaES-Ab.metaES.se, ymax=Ab.metaES+Ab.metaES.se), width = 0.03, colour="grey60") +
+  geom_errorbarh(aes(xmin = Se.metaES-Se.metaES.se, xmax=Se.metaES+Se.metaES.se), height = 0.03, colour="grey60") +
+  geom_point(aes(size=Wsize), show.legend=F, colour="grey45") +
+  stat_function(fun = function(x){0.1 + 0.3636*x}, colour = "black", size=2) + 
+  annotate("text", x=0.7, y=-0.4, label=paste("italic(r)[WY] == ",round(Se.Ab.WYbwls.Imp$r, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.7, y=-0.5, label=paste("italic(R)[WY]^2 == ",round(Se.Ab.WYbwls.Imp$r2, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.7, y=-0.6, label=paste("italic(p) == ",round(Se.Ab.WYbwls.Imp$p, 3)), parse=TRUE, size=6) + 
+  scale_size_continuous(range = c(2,7)) +
+  ggtitle("Laboratory Sedation and RCT Abstinence\nModerate Imputation") +
+  scale_x_continuous("Laboratory Effects on Alcohol Sedation (Hedge's G)") +
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  SpTheme()
+Se.Ab.ebars.Imp.plot
+ggsave(Se.Ab.ebars.Imp.plot, filename="Se.Ab.ebars.Imp.plot.png", width = 6, height = 5, dpi = 400)
+
+
+UXplot.ebars2 <- ggplot()+
+  geom_errorbar(data=XYData, aes(x=X, ymin = Y-Ysd, ymax=Y+Ysd), width = 0.03, colour="grey60") +
+  geom_errorbarh(data=XYData, aes(x=X, y=Y, xmin = X-Xsd, xmax=X+Xsd), height = 0.03, colour="grey60") +
+  geom_point(data=XYData, aes(x=X, y=Y, size=Wsize), show.legend=F, colour="grey45")+
+  scale_size_continuous(range = c(2,7))+
+  geom_smooth(data=XYData, method="lm",aes(x=X, y=Y, linetype="OLS"), se=F, size=2, colour="black")+
+  geom_line(data=WYline, aes(x=X,y=WY.Y, linetype="Williamson-York"), colour="black", size=2)+
+  scale_linetype_manual("Analysis Type", values = c('22', "solid"))+
+  ggtitle("UX Research - Lab vs. Real World") + 
+  scale_x_continuous("Laboratory-Based Outcomes")+
+  scale_y_continuous("Real-World Behavior") +
+  SpTheme() + theme(legend.position = c(0.8,0.13), legend.key.width=unit(2,"line"))
+UXplot.ebars2
+ggsave(UXplot.ebars2, filename="UXplot.ebars2.png", height=4.5, width=5, dpi=400)
+
+
+UXplot.ellispe <- WYtest$plot +ggtitle("UX Research - Lab vs. Real World") + 
+  scale_x_continuous("Laboratory-Based Outcomes")+
+  scale_y_continuous("Real-World Behavior")
+UXplot.ellispe
+ggsave(UXplot.ellispe, filename="UXplot.ellispe.png", height=4.5, width=5, dpi=400)
