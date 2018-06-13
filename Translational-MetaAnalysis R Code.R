@@ -2302,17 +2302,19 @@ Cr.Ab.WYbwls.Imp.plot
 Cr.Ab.ES.Imp$meanSD <- (Cr.Ab.ES.Imp$Cr.metaES.se + Cr.Ab.ES.Imp$Ab.metaES.se)/2
 Cr.Ab.ES.Imp$Wsize <- 1/(Cr.Ab.ES.Imp$meanSD^2)
 Data.Ellipse <- CompEllipse(x=Cr.Ab.ES.Imp$Cr.metaES, xsd=Cr.Ab.ES.Imp$Cr.metaES.se, y=Cr.Ab.ES.Imp$Ab.metaES, ysd=Cr.Ab.ES.Imp$Ab.metaES.se)
-Cr.Ab.Ellipse.Imp.plot <- ggplot() +
+Cr.Ab.Ellipse.Imp.plot <- ggplot(data=Cr.Ab.ES.Imp, aes(x=Cr.metaES, y=Ab.metaES)) +
   geom_hline(yintercept = 0, linetype='33') +
   geom_vline(xintercept = 0, linetype='33') +
   geom_polygon(data=Data.Ellipse,aes(x=xEll,y=yEll, group=obs), alpha=.15) +
-  geom_point(data=Cr.Ab.ES.Imp, aes(x=Cr.metaES, y=Ab.metaES, size=Wsize), show.legend=F) +
-  annotate("text", x=0.25, y=-0.3, label=paste("italic(R)[WY]^2 == ",round(Cr.Ab.WYbwls.Imp$r2, 3)), parse=TRUE) + 
-  annotate("text", x=0.25, y=-0.35, label=paste("italic(p)[WY] == ",round(Cr.Ab.WYbwls.Imp$p, 3)), parse=TRUE) + 
+  geom_point(aes(size=Wsize), show.legend=F) +
+  stat_function(fun = function(x){0.527 + 1.3018*x}, colour = "black", size=2) + 
+  annotate("text", x=0.2, y=-0.3, label=paste("italic(r)[WY] == ",round(Cr.Ab.WYbwls.Imp$r, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.2, y=-0.4, label=paste("italic(R)[WY]^2 == ",round(Cr.Ab.WYbwls.Imp$r2, 3)), parse=TRUE, size=6) + 
+  annotate("text", x=0.2, y=-0.5, label=paste("italic(p) == ",round(Cr.Ab.WYbwls.Imp$p, 3)), parse=TRUE, size=6) + 
   scale_size_continuous(range = c(2,7)) +
-  ggtitle("Laboratory Craving and RCT Abstinence\n- Moderate Imputation -") +
+  ggtitle("Laboratory Craving and RCT Abstinence\nModerate Imputation") +
   scale_x_continuous("Laboratory Effects on Alcohol Craving (Hedge's G)") +
-  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)") + 
+  scale_y_continuous("RCT Abstinence Outcomes (Hedge's G)", limits=c(-0.7, 0.6)) + 
   SpTheme()
 Cr.Ab.Ellipse.Imp.plot
 #ggsave(Cr.Ab.Ellipse.Imp.plot, filename="Cr.Ab.Ellipse.Imp.plot.png", width = 6, height = 5, dpi = 400)
