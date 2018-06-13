@@ -414,7 +414,7 @@ Medication.NOutcomes.Plot <- ggplot(Lab.noSA.main, aes(Med)) + geom_bar(aes(fill
   ggtitle("Number of Effect Sizes Per Medication") + 
   scale_x_discrete("Medication", limits = rev(levels(Lab.noSA.main$Med))) +
   coord_flip() + 
-  SpTheme(legend.position = "right") + theme(legend.title = element_blank())
+  SpTheme(legend.position = c(0.8,0.8)) + theme(legend.title = element_blank())
 Medication.NOutcomes.Plot
 #ggsave(Medication.NOutcomes.Plot, filename="Medication.NOutcomes.Plot.png", width = 5, height = 9, dpi = 300)
 
